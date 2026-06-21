@@ -1,0 +1,20 @@
+// Pairs with TYPESCRIPT-CODE-QUALITY-GATE.md section 3 (tsconfig policy).
+// Extend in the project: { "extends": "./tsconfig.base.json", "compilerOptions": { ... } }
+// Typecheck: tsc --noEmit
+{
+  "compilerOptions": {
+    "strict": true,
+    "noImplicitOverride": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "useUnknownInCatchVariables": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": false,
+    "noEmit": true
+  }
+}

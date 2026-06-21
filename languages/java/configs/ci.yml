@@ -1,0 +1,32 @@
+# Copy to .github/workflows/quality-gate.yml in the target repo.
+# Enforces JAVA-CODE-QUALITY-GATE.md Normative Core MUST items 1-5.
+# Assumes the Checkstyle/SpotBugs/JaCoCo plugins from pom-plugins-snippet.xml are bound to verify.
+name: quality-gate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"   # set to the project's LTS
+          cache: maven
+
+      - name: Versions (evidence)
+        run: ./mvnw -version
+
+      # clean verify runs compile, tests, Checkstyle, SpotBugs, and JaCoCo coverage check
+      # (MUST 1-5) when the plugins from pom-plugins-snippet.xml are configured.
+      - name: Build + test + quality gates
+        run: ./mvnw --batch-mode clean verify
+
+      - name: Dependency vulnerabilities (if configured)
+        run: ./mvnw --batch-mode dependency-check:check || true

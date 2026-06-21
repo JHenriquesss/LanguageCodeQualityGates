@@ -1,0 +1,20 @@
+<!-- Pairs with CSharp_CODE_QUALITY_GATE.md (Normative Core + sections 2,6,7).
+     Place at the solution root so every project inherits it. -->
+<Project>
+  <PropertyGroup>
+    <!-- MUST: nullable + warnings as errors (sections 7, 12) -->
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsAsErrors />
+    <ImplicitUsings>enable</ImplicitUsings>
+
+    <!-- Analyzers + code style enforced in build (section 7) -->
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+
+    <!-- Deterministic builds -->
+    <Deterministic>true</Deterministic>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+</Project>

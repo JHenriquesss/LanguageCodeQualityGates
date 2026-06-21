@@ -1,0 +1,84 @@
+# Machine-readable manifest for the Go quality gate.
+# Parseable by an LLM or CI to produce a deterministic plan/review checklist.
+# Human detail: CORE.md (summary) and REFERENCE.md (full). Enforcement: configs/.
+language: go
+core: CORE.md
+reference: REFERENCE.md
+configs: configs/
+score_scale: 0-100
+
+commands:
+  build: go build ./...
+  format: test -z "$(gofmt -l .)"
+  lint: go vet ./... && golangci-lint run ./...
+  test: go test -race -count=1 ./...
+  coverage: go test -covermode=atomic -coverprofile=coverage.out ./...
+  security: govulncheck ./...
+
+must:
+  1: builds from clean checkout
+  2: formatting passes (gofmt)
+  3: vet/static analysis passes, findings fixed or justified
+  4: tests pass, meaningful, include failure paths; -race for concurrency
+  5: coverage meets risk tier
+  6: complexity within limits or justified
+  7: architecture boundaries preserved
+  8: untrusted input validated at boundaries
+  9: no secrets committed, no sensitive data logged
+  10: errors returned and wrapped, no swallowed/ignored errors
+  11: PHASE-RESULT.md created with command evidence and residual risk
+
+must_not:
+  - declare complete merely because code was written
+  - ignore a failed command or skip one without documenting the blocker
+  - broadly suppress vet/lint findings to pass
+  - panic for recoverable failures
+  - leak goroutines, ignore returned errors, or share state across goroutines without sync
+
+risk_tiers:
+  low:
+    examples: helpers, simple types, internal refactors, throwaway tools
+    must: [1, 2, 3, 4, 9, 10, 11]
+  medium:
+    examples: application services, validation, persistence/external adapters
+    must: [1, 2, 3, 4, 5, 7, 8, 9, 10, 11]
+  high:
+    examples: core business rules, state transitions, authorization, money/time logic
+    must: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    add: [edge-case tests, regression tests, coverage thresholds, architecture checks]
+  critical:
+    examples: security, signing/crypto, legal/financial/compliance, audit, data integrity, concurrency
+    must: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    add: [golden/contract tests, error/rejection paths, audit/traceability, race/cancellation evidence, mutation or fuzz]
+
+complexity:
+  function_cyclomatic_max: 10
+  function_cognitive_max: 15
+  function_lines_max: 50
+  type_method_set_lines_max: 500
+  file_lines_max: 600
+  parameters_max: 6
+  nesting_depth_max: 3
+  exported_items_per_package_file_max: 15
+
+coverage:
+  domain:         {line: 90, branch: 85, mutation: 80}
+  critical:       {line: 95, branch: 90, mutation: 85}
+  application:    {line: 85, branch: 80, mutation: 75}
+  infrastructure: {line: 70, branch: 60, mutation: when_practical}
+  api:            {line: 70, branch: 60, mutation: usually_not_required}
+  generated:      exclude_with_reason
+
+score_caps:             # max score when the evidence is missing/failed
+  code_does_not_build: 49
+  gofmt_not_checked: 59
+  tests_not_run: 64
+  meaningful_tests_missing: 69
+  vet_static_skipped_unreasoned: 74
+  dependency_security_skipped_after_changes: 79
+  concurrency_lacks_race_cancellation_evidence: 84
+  error_paths_untested_medium_high: 84
+  critical_lacks_golden_contract_error_path: 89
+  coverage_skipped_unreasoned: 89
+  unsafe_cgo_without_tests_docs: 89
+  critical_lacks_mutation_fuzz_or_readiness: 94

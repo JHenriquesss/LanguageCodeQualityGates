@@ -1,0 +1,28 @@
+# Supply-chain gate. Run: cargo deny check
+# Pairs with RUST-CODE-QUALITY-GATE.md "Dependency and Supply Chain Hygiene".
+
+[advisories]
+# Fail on known vulnerabilities and unmaintained crates.
+yanked = "deny"
+ignore = []
+
+[licenses]
+# Allow only reviewed licenses; tighten to the project's policy.
+allow = [
+  "MIT",
+  "Apache-2.0",
+  "Apache-2.0 WITH LLVM-exception",
+  "BSD-2-Clause",
+  "BSD-3-Clause",
+  "ISC",
+  "Unicode-DFS-2016",
+]
+confidence-threshold = 0.9
+
+[bans]
+multiple-versions = "warn"
+wildcards = "deny"
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"

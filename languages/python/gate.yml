@@ -1,0 +1,90 @@
+# Machine-readable manifest for the Python quality gate.
+# Parseable by an LLM or CI to produce a deterministic plan/review checklist.
+# Human detail: CORE.md (summary) and REFERENCE.md (full). Enforcement: configs/.
+language: python
+core: CORE.md
+reference: REFERENCE.md
+configs: configs/
+score_scale: 0-100
+
+commands:
+  run: python -c "import <package>"   # imports/runs under the project Python version
+  format: ruff format --check .
+  lint: ruff check . && mypy .
+  test: pytest
+  coverage: coverage run --branch -m pytest && coverage report
+  security: pip-audit && bandit -r src app
+
+must:
+  1: imports and runs under the project Python version
+  2: formatting passes (ruff format)
+  3: lint and static analysis pass (ruff check, mypy/pyright), findings fixed or justified
+  4: tests pass, meaningful, include failure paths
+  5: coverage meets risk tier
+  6: complexity within limits or justified
+  7: architecture boundaries preserved
+  8: every untrusted boundary validated at runtime
+  9: no secrets committed, no sensitive data logged
+  10: failures modeled, no swallowed failures, async tasks supervised
+  11: PHASE-RESULT.md created with command evidence and residual risk
+
+must_not:
+  - declare complete merely because code was written
+  - ignore a failed command or skip one without documenting the blocker
+  - broadly suppress lint/type findings (# noqa, # type: ignore) to pass
+  - pickle/yaml.load/eval/exec on untrusted input
+  - assert for validation/security, mutable default arguments, import-time side effects
+
+risk_tiers:
+  low:
+    examples: helpers, simple data holders, internal refactors, throwaway scripts
+    must: [1, 2, 3, 4, 9, 10, 11]
+  medium:
+    examples: application services, validation, persistence/external adapters, API handlers
+    must: [1, 2, 3, 4, 5, 7, 8, 9, 10, 11]
+  high:
+    examples: core business rules, state machines, authorization, money/time logic
+    must: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    add: [edge-case tests, regression tests, coverage thresholds, architecture checks]
+  critical:
+    examples: security, signing/crypto, legal/financial/compliance, audit, data integrity
+    must: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    add: [golden/contract tests, error/rejection paths, audit/traceability, async cancellation tests, mutation or property/fuzz tests]
+
+complexity:
+  function_cyclomatic_max: 10
+  function_cognitive_max: 15
+  function_lines_max: 50
+  class_module_lines_max: 500
+  file_lines_max: 600
+  parameters_max: 6
+  nesting_depth_max: 3
+  public_symbols_per_module_max: 15
+
+coverage:
+  domain:         {line: 90, branch: 85, mutation: 80}
+  critical:       {line: 95, branch: 90, mutation: 85}
+  application:    {line: 85, branch: 80, mutation: 75}
+  infrastructure: {line: 70, branch: 60, mutation: when_practical}
+  api:            {line: 70, branch: 60, mutation: usually_not_required}
+  generated:      exclude_with_reason
+
+score_caps:             # score must not exceed
+  does_not_import_run_on_project_python: 30
+  main_tests_not_run: 40
+  no_meaningful_tests: 55
+  formatting_lint_not_run_unexplained: 65
+  type_checking_missing_unexplained: 65
+  business_rules_without_unit_tests: 60
+  runtime_validation_missing_at_new_boundaries: 70
+  architecture_boundaries_unclear: 70
+  no_coverage_evidence: 75
+  async_lacks_cancellation_timeout_error_tests: 80
+  critical_rules_without_edge_case_failure_tests: 80
+  security_dependency_audit_missing: 85
+  unsafe_deserialization_or_assert_validation_in_critical: 80
+  mutation_missing_for_critical_unjustified: 85
+  known_critical_bug_remains: 60
+  known_security_issue_remains: 50
+  secrets_committed: 20
+  phase_result_missing: 50

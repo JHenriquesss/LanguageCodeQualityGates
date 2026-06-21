@@ -1,0 +1,95 @@
+# Machine-readable manifest for the Rust quality gate.
+# Parseable by an LLM or CI to produce a deterministic plan/review checklist.
+# Human detail: CORE.md (summary) and REFERENCE.md (full). Enforcement: configs/.
+language: rust
+core: CORE.md
+reference: REFERENCE.md
+configs: configs/
+score_scale: 0-100
+
+commands:
+  build: cargo check --workspace --all-targets --all-features
+  format: cargo fmt --all -- --check
+  lint: cargo clippy --workspace --all-targets --all-features -- -D warnings
+  test: cargo test --workspace --all-features
+  coverage: cargo llvm-cov --workspace --all-features --fail-under-lines 80
+  security: cargo audit && cargo deny check
+
+must:
+  1: build compiles from clean checkout
+  2: formatting passes
+  3: lint passes, no new warnings, suppressions justified
+  4: tests pass, meaningful, include failure paths
+  5: coverage meets risk tier
+  6: complexity within limits or justified
+  7: architecture boundaries preserved
+  8: untrusted input validated at boundaries
+  9: no secrets committed, no sensitive data logged
+  10: errors modeled with Result/typed errors, no swallowed failures
+  11: PHASE-RESULT.md created with command evidence and residual risk
+
+must_not:
+  - declare complete merely because code was written
+  - ignore a failed command or skip one without documenting the blocker
+  - broadly suppress clippy/compiler warnings to pass
+  - unwrap/expect/panic in recoverable paths
+  - unsafe without isolation, SAFETY justification, and Miri/tests
+
+risk_tiers:
+  low:
+    examples: helpers, simple data types, internal refactors, throwaway scripts
+    must: [1, 2, 3, 4, 9, 10, 11]
+  medium:
+    examples: application services, validation, persistence/external adapters
+    must: [1, 2, 3, 4, 5, 7, 8, 9, 10, 11]
+  high:
+    examples: core business rules, state transitions, authorization, money/time logic
+    must: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    add: [edge-case tests, regression tests, coverage thresholds, architecture checks]
+  critical:
+    examples: security, signing/crypto, legal/financial/compliance, audit, data integrity, unsafe
+    must: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    add: [golden/contract tests, error/rejection paths, audit/traceability, Miri for unsafe, mutation or fuzz]
+
+complexity:
+  function_cyclomatic_max: 10
+  function_cognitive_max: 15
+  function_lines_max: 50
+  type_impl_lines_max: 500
+  file_lines_max: 600
+  parameters_max: 6
+  nesting_depth_max: 3
+  public_items_per_module_max: 15
+
+coverage:               # line / branch / mutation (percent)
+  domain:         {line: 90, branch: 85, mutation: 80}
+  critical:       {line: 95, branch: 90, mutation: 85}
+  application:    {line: 85, branch: 80, mutation: 75}
+  infrastructure: {line: 70, branch: 60, mutation: when_practical}
+  api:            {line: 70, branch: 60, mutation: usually_not_required}
+  generated:      exclude_with_reason
+
+score_caps:             # max score when the evidence is missing/failed
+  code_does_not_compile: 30
+  cargo_fmt_not_run: 70
+  clippy_not_run_unexplained: 75
+  main_tests_not_run: 40
+  no_meaningful_tests: 55
+  business_rules_without_unit_tests: 60
+  quality_gates_not_run_unexplained: 65
+  architecture_boundaries_unclear: 70
+  no_coverage_evidence: 75
+  critical_rules_without_edge_case_tests: 80
+  security_dependency_audit_missing: 85
+  mutation_missing_for_critical_unjustified: 85
+  unsafe_without_safety_docs: 70
+  unsafe_without_miri_or_reason: 80
+  unwrap_expect_in_recoverable_paths: 80
+  panic_for_recoverable_failures: 75
+  regulatory_payloads_without_golden_contract_tests: 70
+  feature_combinations_untested: 85
+  public_api_changed_without_semver: 80
+  known_critical_bug_remains: 60
+  known_security_issue_remains: 50
+  secrets_committed: 20
+  phase_result_missing: 50

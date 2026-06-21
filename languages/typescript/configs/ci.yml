@@ -1,0 +1,44 @@
+# Copy to .github/workflows/quality-gate.yml in the target repo.
+# Enforces TYPESCRIPT-CODE-QUALITY-GATE.md Normative Core MUST items 1-5.
+# Adjust the package-manager commands (npm/pnpm/yarn) to the project.
+name: quality-gate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Versions (evidence)
+        run: node --version && npm --version && npx tsc --version
+
+      - name: Install (frozen lockfile)
+        run: npm ci
+
+      - name: Format (MUST 2)
+        run: npx prettier --check .
+
+      - name: Typecheck (MUST 1)
+        run: npx tsc --noEmit
+
+      - name: Lint (MUST 3)
+        run: npx eslint . --max-warnings=0
+
+      - name: Test (MUST 4)
+        run: npm test
+
+      - name: Coverage (MUST 5)
+        run: npm run test:coverage --if-present
+
+      - name: Audit
+        run: npm audit --audit-level=high

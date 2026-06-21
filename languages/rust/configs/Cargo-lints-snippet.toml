@@ -1,0 +1,22 @@
+# Paste into the workspace root Cargo.toml. Enforces MUST-NOT items from the
+# RUST-CODE-QUALITY-GATE.md Normative Core. Use [workspace.lints] in a workspace,
+# or [lints] in a single crate, then add `[lints] workspace = true` to member crates.
+
+[workspace.lints.rust]
+# Forbid unsafe in crates that do not need it (override per-crate where unsafe is justified).
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+# Panic-prone patterns: warn everywhere, deny in critical crates.
+unwrap_used = "warn"
+expect_used = "warn"
+panic = "warn"
+todo = "warn"
+unimplemented = "warn"
+dbg_macro = "warn"
+print_stdout = "warn"
+print_stderr = "warn"
+indexing_slicing = "warn"
+# Enable the nursery complexity lint referenced in clippy.toml.
+cognitive_complexity = "warn"
+too_many_lines = "warn"

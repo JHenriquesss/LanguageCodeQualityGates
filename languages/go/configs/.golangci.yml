@@ -1,0 +1,37 @@
+# Pairs with GO-CODE-QUALITY-GATE.md (Normative Core + Complexity Limits).
+# Run: golangci-lint run ./...
+version: "2"
+
+linters:
+  enable:
+    - errcheck        # MUST NOT: ignored errors
+    - govet           # MUST 3
+    - staticcheck
+    - ineffassign
+    - unused
+    - gocyclo         # cyclomatic complexity
+    - gocognit        # cognitive complexity
+    - funlen          # function length
+    - nestif          # nesting depth
+    - gosec           # security
+    - bodyclose       # leaked HTTP response bodies
+    - contextcheck    # lost context/cancellation
+    - revive
+    - misspell
+
+  settings:
+    gocyclo:
+      min-complexity: 10      # doc maximum
+    gocognit:
+      min-complexity: 15      # doc maximum
+    funlen:
+      lines: 50               # doc maximum function length
+      statements: 40
+    nestif:
+      min-complexity: 4       # ~ nesting depth 3
+    gosec:
+      excludes: []
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0

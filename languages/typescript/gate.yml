@@ -1,0 +1,78 @@
+# Machine-readable manifest for the TypeScript quality gate.
+# Parseable by an LLM or CI to produce a deterministic plan/review checklist.
+# Human detail: CORE.md (summary) and REFERENCE.md (full). Enforcement: configs/.
+language: typescript
+core: CORE.md
+reference: REFERENCE.md
+configs: configs/
+score_scale: 0-100
+
+commands:
+  typecheck: tsc --noEmit
+  format: prettier --check .
+  lint: eslint . --max-warnings=0
+  test: npm test
+  coverage: npm run test:coverage
+  security: npm audit --audit-level=high
+
+must:
+  1: code typechecks (tsc --noEmit)
+  2: formatting passes (prettier)
+  3: eslint/static analysis passes, findings fixed or justified
+  4: tests pass, meaningful, include failure paths
+  5: coverage meets risk tier
+  6: complexity within limits or justified
+  7: architecture boundaries preserved
+  8: every untrusted boundary validated at runtime
+  9: no secrets committed or bundled to client, no sensitive data logged
+  10: failures modeled, promises awaited/handled, no swallowed errors
+  11: PHASE-RESULT.md created with command evidence and residual risk
+
+must_not:
+  - declare complete merely because code was written
+  - ignore a failed command or skip one without documenting the blocker
+  - broadly suppress eslint/compiler diagnostics to pass
+  - use any, unsafe assertions, @ts-ignore, or JSON.parse(...) as T without justification
+  - leave floating promises or trust unvalidated external data
+
+risk_tiers:
+  low:
+    examples: formatting helpers, simple display logic, internal non-critical refactors
+    must: [1, 2, 3, 4, 9, 10, 11]
+  medium:
+    examples: application services, validation, persistence/external adapters, API handlers
+    must: [1, 2, 3, 4, 5, 7, 8, 9, 10, 11]
+  high:
+    examples: core business rules, state machines, authorization, money/time logic
+    must: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    add: [edge-case tests, regression tests, coverage thresholds, architecture checks]
+  critical:
+    examples: security, signing/crypto, legal/financial/compliance, audit, data integrity
+    must: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    add: [golden/contract tests, error/rejection paths, audit/traceability, async cancellation/timeout tests, mutation or property tests]
+
+complexity:
+  function_cyclomatic_max: 10
+  function_cognitive_max: 15
+  function_lines_max: 50
+  class_module_lines_max: 500
+  file_lines_max: 600
+  parameters_max: 6
+  nesting_depth_max: 3
+  public_exports_per_module_max: 15
+
+coverage:               # quality of assertions matters more than raw percentage
+  changed_business_critical: {line: 85, branch: 80}
+  critical_domain_legal_security: {branch: near_100_meaningful}
+
+score_caps:             # score must not exceed
+  typecheck_failed: 60
+  eslint_not_run_no_blocker: 65
+  tests_not_run: 70
+  only_happy_path_for_business_logic: 75
+  runtime_validation_missing_at_new_boundaries: 75
+  dependency_changes_not_reviewed: 80
+  public_api_changed_without_consumer_tests: 80
+  any_unsafe_assertions_suppressions_unjustified: 85
+  async_lacks_cancellation_timeout_error_tests: 85
+  high_risk_lacks_golden_contract_failure_path: 90

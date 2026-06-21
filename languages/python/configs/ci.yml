@@ -1,0 +1,45 @@
+# Copy to .github/workflows/quality-gate.yml in the target repo.
+# Enforces PYTHON-CODE-QUALITY-GATE.md Normative Core MUST items 1-5.
+name: quality-gate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version  # or pyproject requires-python
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]" || pip install ruff mypy pytest coverage pip-audit bandit
+
+      - name: Versions (evidence)
+        run: python -VV && python -m pip --version
+
+      - name: Format (MUST 2)
+        run: ruff format --check .
+
+      - name: Lint (MUST 3)
+        run: ruff check .
+
+      - name: Type check (MUST 3)
+        run: mypy .
+
+      - name: Tests + coverage (MUST 4-5)
+        run: |
+          coverage run --branch -m pytest
+          coverage report   # honors fail_under in pyproject.toml
+
+      - name: Security
+        run: |
+          pip-audit || true
+          bandit -r src app 2>/dev/null || true

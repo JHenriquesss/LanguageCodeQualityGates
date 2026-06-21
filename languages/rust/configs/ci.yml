@@ -1,0 +1,54 @@
+# Copy to .github/workflows/quality-gate.yml in the target repo.
+# Enforces RUST-CODE-QUALITY-GATE.md Normative Core MUST items 1-5.
+name: quality-gate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Versions (evidence)
+        run: rustc --version && cargo --version
+
+      - name: Format (MUST 2)
+        run: cargo fmt --all -- --check
+
+      - name: Clippy (MUST 3)
+        run: cargo clippy --workspace --all-targets --all-features --locked -- -D warnings
+
+      - name: Build (MUST 1)
+        run: cargo check --workspace --all-targets --all-features --locked
+
+      - name: Test (MUST 4)
+        run: cargo test --workspace --all-features --locked
+
+      - name: Coverage (MUST 5)
+        run: |
+          cargo install cargo-llvm-cov --locked || true
+          cargo llvm-cov --workspace --all-features --fail-under-lines 80
+
+  supply-chain:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: EmbarkStudios/cargo-deny-action@v2
+      - name: Audit
+        run: |
+          cargo install cargo-audit --locked || true
+          cargo audit

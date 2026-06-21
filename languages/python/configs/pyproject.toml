@@ -1,0 +1,38 @@
+# Pairs with PYTHON-CODE-QUALITY-GATE.md (Normative Core + Complexity + Coverage).
+# Merge these [tool.*] tables into the project's pyproject.toml.
+# Run: ruff format --check . ; ruff check . ; mypy . ; pytest
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"  # set to the project's minimum
+
+[tool.ruff.lint]
+select = [
+  "E", "F", "W",   # pyflakes / pycodestyle
+  "I",             # import sorting
+  "B",             # bugbear (mutable defaults, etc.)
+  "UP",            # pyupgrade
+  "S",             # flake8-bandit: eval/exec/pickle/yaml/assert/subprocess (MUST NOT)
+  "ASYNC",         # async pitfalls
+  "C90",           # mccabe complexity
+]
+# MUST NOT: do not blanket-ignore. Narrow per-line ignores only.
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10   # doc maximum (cyclomatic)
+
+[tool.mypy]
+strict = true
+warn_unreachable = true
+disallow_any_explicit = true     # MUST NOT: Any in critical code
+show_error_codes = true
+
+[tool.coverage.run]
+branch = true
+
+[tool.coverage.report]
+fail_under = 80      # global floor; tighten per-module to the doc tiers (domain 90 / app 85)
+show_missing = true
+
+[tool.pytest.ini_options]
+addopts = "--strict-markers --strict-config"

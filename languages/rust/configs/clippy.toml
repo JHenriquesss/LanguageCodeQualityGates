@@ -1,0 +1,13 @@
+# Pairs with RUST-CODE-QUALITY-GATE.md (Complexity Limits + Normative Core).
+# Run: cargo clippy --workspace --all-targets --all-features -- -D warnings
+#
+# Thresholds that clippy exposes as config. Function length, cyclomatic, and nesting
+# limits from the doc are enforced by the `too_many_lines` / `cognitive_complexity`
+# lints (enable via the [lints] table below) plus review.
+
+too-many-arguments-threshold = 6
+type-complexity-threshold = 250
+# clippy::too_many_lines triggers above this (doc maximum: 50 lines/function).
+too-many-lines-threshold = 50
+# clippy::cognitive_complexity (nursery) triggers above this (doc maximum: 15).
+cognitive-complexity-threshold = 15

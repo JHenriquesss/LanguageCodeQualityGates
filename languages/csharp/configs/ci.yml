@@ -1,0 +1,36 @@
+# Copy to .github/workflows/quality-gate.yml in the target repo.
+# Enforces CSharp_CODE_QUALITY_GATE.md Normative Core MUST items 1-5.
+name: quality-gate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json  # or dotnet-version: '9.x'
+
+      - name: Versions (evidence)
+        run: dotnet --info
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Format (MUST 2)
+        run: dotnet format --verify-no-changes
+
+      - name: Build + analyzers + warnings-as-errors (MUST 1, 3)
+        run: dotnet build --configuration Release --no-restore -warnaserror
+
+      - name: Test + coverage (MUST 4-5)
+        run: dotnet test --configuration Release --no-build --collect:"XPlat Code Coverage"
+
+      - name: Vulnerable packages
+        run: dotnet list package --vulnerable --include-transitive

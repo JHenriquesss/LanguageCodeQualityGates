@@ -1,0 +1,89 @@
+# Machine-readable manifest for the Java quality gate.
+# Parseable by an LLM or CI to produce a deterministic plan/review checklist.
+# Human detail: CORE.md (summary) and REFERENCE.md (full). Enforcement: configs/.
+language: java
+core: CORE.md
+reference: REFERENCE.md
+configs: configs/
+score_scale: 0-100
+
+commands:
+  build: ./mvnw clean verify   # or ./gradlew clean build
+  format: ./mvnw checkstyle:check   # google-java-format / Checkstyle
+  lint: ./mvnw spotbugs:check pmd:check   # SpotBugs, PMD, Error Prone, ArchUnit where configured
+  test: ./mvnw test
+  coverage: ./mvnw jacoco:report jacoco:check
+  security: ./mvnw dependency-check:check
+
+must:
+  1: compiles and tests run from clean checkout
+  2: formatting verified (google-java-format/Checkstyle) or documented
+  3: static analysis ran where configured, findings fixed or justified
+  4: tests pass, meaningful, include failure paths
+  5: coverage meets risk tier; mutation for critical rules where available
+  6: complexity within limits or justified
+  7: architecture boundaries preserved
+  8: untrusted input validated at boundaries
+  9: no secrets committed, no sensitive data logged
+  10: errors handled explicitly at the right layer, no swallowed exceptions
+  11: PHASE-RESULT.md created with command evidence and residual risk
+
+must_not:
+  - declare complete merely because code was written
+  - ignore a failed command or skip one without documenting the blocker
+  - disable or broadly suppress quality gates/warnings to pass
+  - catch Throwable/Exception and swallow it
+  - use double/float for money, business logic in controllers/entities, field injection, or @Data on domain objects
+
+risk_tiers:
+  low:
+    examples: simple DTOs, straightforward mappers, simple config, non-critical utilities
+    must: [1, 2, 3, 4, 9, 10, 11]
+  medium:
+    examples: application services, validation, persistence adapters, API endpoints
+    must: [1, 2, 3, 4, 5, 7, 8, 9, 10, 11]
+  high:
+    examples: core business rules, payroll/legal logic, state transitions, authorization
+    must: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    add: [edge-case tests, regression tests, coverage thresholds, architecture checks, mutation where available]
+  critical:
+    examples: security, signing/crypto, legal/financial/compliance, audit, data integrity
+    must: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    add: [golden/contract tests, schema validation, error/rejection paths, audit/traceability, redaction, mutation tests]
+
+complexity:
+  method_cyclomatic_max: 10
+  method_cognitive_max: 15
+  method_lines_max: 50
+  class_lines_max: 500
+  file_lines_max: 600
+  constructor_parameters_max: 7
+  method_parameters_max: 6
+  nesting_depth_max: 3
+  public_methods_per_class_max: 15
+
+coverage:
+  domain:         {line: 90, branch: 85, mutation: 80}
+  critical:       {line: 95, branch: 90, mutation: 85}
+  application:    {line: 85, branch: 80, mutation: 75}
+  infrastructure: {line: 70, branch: 60, mutation: when_practical}
+  api:            {line: 70, branch: 60, mutation: usually_not_required}
+  generated:      exclude_with_reason
+
+score_caps:             # max score when the evidence is missing/failed
+  code_does_not_compile: 30
+  main_tests_not_run: 40
+  no_meaningful_tests: 55
+  business_rules_without_unit_tests: 60
+  quality_gates_not_run_unexplained: 65
+  architecture_boundaries_unclear: 70
+  no_coverage_evidence: 75
+  critical_rules_without_edge_case_tests: 80
+  security_dependency_audit_missing: 85
+  static_analysis_missing: 85
+  mutation_missing_for_critical_unjustified: 85
+  regulatory_payloads_without_golden_contract_tests: 70
+  known_critical_bug_remains: 60
+  known_security_issue_remains: 50
+  secrets_committed: 20
+  phase_result_missing: 50
