@@ -183,6 +183,28 @@ booleans, or raw primitives where a meaningful domain type belongs.
 - Avoid: `Hash` (`{}`) and `OpenStruct` as domain models; boolean flags that change behavior; primitive obsession for money, dates, identifiers, and domain codes.
 - Almost never: represent financial/audit state as arbitrary strings; assemble domain objects through a long sequence of setters; use `OpenStruct` in hot or critical paths.
 
+```ruby
+# Immutable value object; invariants enforced at construction.
+class EmployeeId
+  attr_reader :value
+
+  def initialize(value)
+    raise ArgumentError, "invalid employee id: #{value.inspect}" unless value.match?(/\A\d{8}\z/)
+
+    @value = value.freeze
+    freeze
+  end
+end
+
+# Closed set as frozen constants; reject unknown strings at the boundary.
+module EventStatus
+  DRAFT  = :draft
+  SIGNED = :signed
+  SENT   = :sent
+  ALL    = [DRAFT, SIGNED, SENT].freeze
+end
+```
+
 ## 11. `nil` and Absence Semantics
 
 Use `nil` only when absence is legitimate, explicit, and tested. `nil` is the most common source of
@@ -211,6 +233,19 @@ validation failures, domain rejections, and infrastructure failures.
 - Prefer: a small domain exception hierarchy; result objects for expected business outcomes where they clarify flow; `ensure` for cleanup; error codes for auditable failures; mapping infrastructure errors to safe application/API errors at the boundary.
 - Avoid: `rescue => e; end` (swallowing); `rescue nil`; rescuing and returning fake success; logging-and-re-raising at every layer; using exceptions for ordinary control flow in hot paths.
 - Almost never: `rescue Exception` (catches `SignalException`, `NoMemoryError`, etc.); swallow security/persistence/signing failures; leak stack traces, SQL, tokens, or payloads to external clients.
+
+```ruby
+# Domain exception hierarchy lets callers distinguish failures.
+class DomainError < StandardError; end
+class ValidationError < DomainError; end
+
+def parse_event(payload)
+  Event.from_hash(payload)
+rescue KeyError => e
+  # Wrap narrowly and preserve the cause (`cause` is set automatically here).
+  raise ValidationError, "missing field: #{e.message}"
+end
+```
 
 ## 14. `raise`, `exit`, `abort`, TODO, and Debug Policy
 

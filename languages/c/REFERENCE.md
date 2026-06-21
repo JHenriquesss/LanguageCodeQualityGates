@@ -180,6 +180,22 @@ Use precise types and treat integer math as a primary bug source.
 - Avoid: mixing signed and unsigned in comparisons; `int` for sizes; implicit narrowing conversions (`-Wconversion` catches these); assuming `char` signedness or integer width.
 - Almost never: compute an allocation size by multiplying untrusted values without an overflow check; cast away `const`; rely on signed-overflow wraparound (it is UB).
 
+```c
+// Check the multiplication before allocating: never trust an untrusted count.
+int alloc_records(size_t count, size_t elem_size, void **out) {
+    size_t bytes;
+    if (__builtin_mul_overflow(count, elem_size, &bytes)) {
+        return -EOVERFLOW;          // overflow caught, not wrapped
+    }
+    void *p = calloc(count, elem_size);
+    if (p == NULL) {
+        return -ENOMEM;             // allocation failure is an error path
+    }
+    *out = p;
+    return 0;
+}
+```
+
 ## 11. Memory Management
 
 Every allocation has exactly one owner and one free, on every path. This is the highest-risk area in
@@ -207,6 +223,31 @@ C signals errors by return value and `errno`. Checking them is mandatory.
 - Prefer: a consistent status/`enum` error type per module; `goto cleanup` for unified teardown; documenting which functions can fail and how.
 - Avoid: ignoring return values (`(void)` only with a justified reason); partial cleanup on error; mixing error conventions within a module.
 - Almost never: treat a failed `read`/`write`/`malloc` as success; return success with an uninitialized out-parameter; leak resources because the error path was untested.
+
+```c
+// Single cleanup path: every resource is released on every error return.
+int load_config(const char *path, struct config *out) {
+    int rc = -EIO;
+    FILE *f = fopen(path, "r");
+    if (f == NULL) {
+        return -errno;
+    }
+    char *buf = malloc(MAX_CONFIG);
+    if (buf == NULL) {
+        rc = -ENOMEM;
+        goto cleanup;          // no leak, even on the early failure
+    }
+    if (parse_config(f, buf, out) != 0) {
+        rc = -EINVAL;
+        goto cleanup;
+    }
+    rc = 0;
+cleanup:
+    free(buf);
+    fclose(f);
+    return rc;
+}
+```
 
 ## 14. Undefined Behavior
 

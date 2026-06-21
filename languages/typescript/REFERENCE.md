@@ -135,12 +135,42 @@ Use the type system to make invalid states hard to represent, remembering types 
 - Avoid: `Record<string, any>`/`any` as a domain model; `as SomeType` after parsing untrusted input; double assertions (`as unknown as T`); non-null `!` to silence real absence; `@ts-ignore` (use `@ts-expect-error` with a reason in tests/narrow cases).
 - Almost never: `// @ts-nocheck` in production; `any` as a bridge across boundaries; unsafe assertions in security/financial/persistence/audit code; trust generated declarations without contract tests.
 
+```ts
+// Branded type: a raw string cannot be used where an EmployeeId is required.
+type EmployeeId = string & { readonly __brand: "EmployeeId" };
+
+function parseEmployeeId(raw: string): EmployeeId {
+  if (!/^\d{8}$/.test(raw)) throw new ValidationError(`invalid id: ${raw}`);
+  return raw as EmployeeId;
+}
+
+// Discriminated union: invalid combinations are unrepresentable.
+type Event =
+  | { kind: "draft" }
+  | { kind: "signed"; signatureId: string }
+  | { kind: "sent"; protocol: string };
+```
+
 ## 8. Null, Undefined, Immutability, and Errors
 
 - Null/undefined: distinguish missing/undefined/null/empty/zero when the contract cares; validate required fields before constructing domain objects; avoid ambiguous returns where `undefined` could mean not-found/invalid/unauthorized/failed; avoid `value || fallback` when `0`/`false`/empty are valid.
 - Immutability: use `readonly`/`ReadonlyArray`/`ReadonlyMap`; avoid exposing mutable collections from domain objects; copy at boundaries when ownership is unclear; make state transitions explicit; avoid global mutable state.
 - Errors: distinguish validation/business rejection/authorization/conflict/timeout/cancellation/dependency/internal failures; use `Error` subclasses or a `Result<T, E>` for programmatic handling; preserve root cause (`cause`) where safe; handle promise rejections; do not leak provider payloads, SQL, tokens, secrets, or stack traces to external clients.
 - Almost never: throw strings/plain objects; `catch {}` without a reason; ignore promise rejections; collapse all failures into HTTP 500 or a generic `Error`.
+
+```ts
+type Result<T, E> =
+  | { readonly ok: true; readonly value: T }
+  | { readonly ok: false; readonly error: E };
+
+// Decode + validate at the boundary; callers handle the typed error explicitly.
+function decodeRequest(input: unknown): Result<Request, ValidationError> {
+  const parsed = RequestSchema.safeParse(input); // runtime validation, not just types
+  return parsed.success
+    ? { ok: true, value: parsed.data }
+    : { ok: false, error: new ValidationError(parsed.error.message) };
+}
+```
 
 ## 9. Async, Promises, and Cancellation
 

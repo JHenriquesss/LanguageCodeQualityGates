@@ -146,6 +146,22 @@ Model behavior, invariants, and intent; prefer immutability by default.
 - Avoid: anemic domain models for non-trivial rules; public setters by default; deep inheritance; boolean parameters that change behavior; primitive obsession; mutable DTOs leaking into domain logic; static mutable state.
 - Almost never: inheritance before composition has failed; `Map<String, Object>` as a domain model; `Lombok @Data` on domain objects; returning internal collections directly.
 
+```java
+// Value object: invariants enforced at construction, immutable.
+public record Money(BigDecimal amount, Currency currency) {
+    public Money {
+        Objects.requireNonNull(amount, "amount");
+        Objects.requireNonNull(currency, "currency");
+        if (amount.scale() > currency.getDefaultFractionDigits()) {
+            throw new IllegalArgumentException("scale exceeds currency precision");
+        }
+    }
+}
+
+// Closed hierarchy with sealed types — the compiler enforces exhaustive handling.
+public sealed interface Event permits Draft, Signed, Sent, Rejected {}
+```
+
 ## 10. Null Safety, Error Handling, and Validation
 
 - Null: validate required constructor arguments (`Objects.requireNonNull`); fail fast for missing mandatory values; return empty collections instead of null; use `Optional` as a return type for legitimate absence (never as a field or parameter); avoid `Optional.get()` without proving presence.
@@ -153,6 +169,22 @@ Model behavior, invariants, and intent; prefer immutability by default.
 - Validation: validate at boundaries and enforce invariants in the domain; do not rely only on UI/controller/DB validation; use Bean Validation for simple input constraints and explicit validators for complex rules.
 - Avoid: returning null from public methods; catching broad `Exception` without reason; swallowing exceptions; logging-and-rethrowing at every layer; exposing stack traces to users.
 - Almost never: catch `Throwable`/`Error`; use exceptions for normal control flow; ignore failed persistence/signing/transmission/audit operations.
+
+```java
+// Domain exception expresses failure meaning; cause preserved when wrapping.
+public final class CertificateExpiredException extends DomainException {
+    public CertificateExpiredException(String certificateId, Throwable cause) {
+        super("certificate %s expired".formatted(certificateId), cause);
+    }
+}
+
+// Convert infrastructure failures to application outcomes at the boundary.
+try {
+    return signer.sign(document);
+} catch (KeyStoreException cause) {
+    throw new SigningFailedException(document.id(), cause); // keep the cause
+}
+```
 
 ## 11. Time, Money, and Numerics
 

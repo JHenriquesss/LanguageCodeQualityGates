@@ -139,12 +139,48 @@ Use the type system and nullable reference types to make invalid states hard to 
 - Avoid: `Dictionary<string, object>`/`dynamic` as a domain model; boolean flags that change behavior; primitive obsession; `default!`/`null!`/`!` to satisfy the compiler for domain objects; returning `null` from async methods instead of a meaningful result.
 - Almost never: represent important state as arbitrary strings; depend on serializers to enforce non-null domain invariants; use comments to describe invariants the type system could enforce.
 
+```csharp
+// Value object: invariants enforced at construction, immutable.
+public readonly record struct EmployeeId
+{
+    public string Value { get; }
+
+    public EmployeeId(string value)
+    {
+        if (value is not { Length: 8 } || !value.All(char.IsAsciiDigit))
+            throw new ArgumentException($"invalid employee id: {value}", nameof(value));
+        Value = value;
+    }
+}
+
+// Closed set as a sealed hierarchy — switch expressions are exhaustive.
+public abstract record Event
+{
+    public sealed record Draft : Event;
+    public sealed record Signed(string SignatureId) : Event;
+    public sealed record Sent(string Protocol) : Event;
+}
+```
+
 ## 9. Immutability, Errors, and Process Termination
 
 - Immutability: keep domain state immutable where practical; make mutation explicit; enforce invariants in constructors/factories/mutation methods; avoid public setters and exposing mutable collections (`IReadOnlyList<T>`); use records carefully (init properties can still allow invalid combinations); avoid global mutable/static state.
 - Errors: distinguish programmer bugs, validation failures, domain rejections, infrastructure failures, cancellation, conflicts, and faults; preserve root causes (`throw;` not `throw ex;`); convert infrastructure failures at boundaries; do not leak stack traces, connection strings, tokens, SQL, or sensitive payloads to external clients; test failure branches.
 - Termination/stubs: remove `TODO`/`NotImplementedException`/placeholders/`Console.WriteLine` debug leftovers; avoid `Environment.Exit` outside process entrypoints; use debug assertions only as developer diagnostics, not runtime validation; observe background-service exceptions.
 - Almost never: catch `Exception` and return generic failure without preserving cause; swallow exceptions; terminate the process from domain/application/library code.
+
+```csharp
+// Domain exception expresses failure meaning; cause preserved.
+public sealed class CertificateExpiredException(string certificateId, Exception? inner)
+    : DomainException($"certificate {certificateId} expired", inner);
+
+// Or model expected business outcomes as a result the caller must handle.
+public abstract record SendResult
+{
+    public sealed record Ok(Receipt Receipt) : SendResult;
+    public sealed record Rejected(string Code) : SendResult;
+}
+```
 
 ## 10. Async, Concurrency, and Dependency Injection
 

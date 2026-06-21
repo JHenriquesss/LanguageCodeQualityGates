@@ -146,6 +146,27 @@ Use defined types to make invalid states hard to represent.
 - Avoid: `map[string]string`/`map[string]any`/`any` as a domain model; boolean flags that change behavior; pointers for required fields just to express optionality; primitive obsession.
 - Almost never: represent important state as arbitrary strings; use comments to describe invariants types could enforce.
 
+```go
+// Defined type + constructor returning (T, error): no invalid value escapes.
+type EmployeeID string
+
+func ParseEmployeeID(raw string) (EmployeeID, error) {
+	if len(raw) != 8 || !allDigits(raw) {
+		return "", fmt.Errorf("invalid employee id %q", raw)
+	}
+	return EmployeeID(raw), nil
+}
+
+// Closed set as typed constants; validate external strings before converting.
+type EventStatus string
+
+const (
+	StatusDraft  EventStatus = "draft"
+	StatusSigned EventStatus = "signed"
+	StatusSent   EventStatus = "sent"
+)
+```
+
 ## 10. Pointers, Values, and Nil
 
 Pointer and value semantics should make code safer, not more fragile.
@@ -163,6 +184,22 @@ Errors must be explicit and meaningful; reserve panic for programmer bugs.
 - Prefer: `errors.Is`/`errors.As`-compatible design; sentinel errors only for stable comparison; custom error types for structured data; `fmt.Errorf("context: %w", err)`; separate error types per layer.
 - Avoid: `errors.New("failed")`; stringly typed errors; `panic` in production paths; returning nil error with an invalid result; collapsing all failures into one error; comparing error strings in production logic.
 - Almost never: panic for recoverable failures; swallow errors; ignore returned errors; handle deferred close/commit errors carelessly.
+
+```go
+var ErrNotFound = errors.New("event not found")
+
+type ValidationError struct{ Field, Reason string }
+
+func (e *ValidationError) Error() string { return e.Field + ": " + e.Reason }
+
+// Wrap to preserve cause; callers use errors.Is / errors.As, not string matching.
+func (s *Service) Save(ctx context.Context, ev Event) error {
+	if err := s.repo.Save(ctx, ev); err != nil {
+		return fmt.Errorf("save event %s: %w", ev.ID, err)
+	}
+	return nil
+}
+```
 
 ## 12. Panic, recover, and Process Exit
 

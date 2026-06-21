@@ -154,6 +154,29 @@ Use the type system to make invalid states unrepresentable.
 - Avoid: `HashMap<String, String>` or `serde_json::Value` as a domain model; boolean flags that change behavior; `Option<T>` for required fields; primitive obsession.
 - Almost never: represent important state as arbitrary strings; use comments to describe invariants the type system could enforce.
 
+```rust
+// Parse, don't validate-and-hope: no invalid EmployeeId can exist.
+pub struct EmployeeId(String);
+
+impl EmployeeId {
+    pub fn parse(raw: &str) -> Result<Self, IdError> {
+        if raw.len() == 8 && raw.bytes().all(|b| b.is_ascii_digit()) {
+            Ok(Self(raw.to_owned()))
+        } else {
+            Err(IdError::Invalid)
+        }
+    }
+}
+
+// Closed state set as an enum — illegal states are unrepresentable.
+pub enum Event {
+    Draft,
+    Signed { signature_id: String },
+    Sent { protocol: String },
+    Rejected { reason: String },
+}
+```
+
 ## 10. Ownership, Borrowing, and Lifetimes
 
 Ownership should make code safer and simpler, not cleverer.
@@ -171,6 +194,25 @@ Use `Result` for recoverable failures; reserve panic for programmer bugs and imp
 - Prefer: `thiserror` for library/domain errors; `anyhow` for binaries/top-level; `#[from]` only where conversion preserves meaning; user-safe messages plus internal traceability; separate error types per layer.
 - Avoid: `anyhow::Error` in public library APIs; stringly typed errors; `.unwrap()`/`.expect("should work")`; returning `Option` when the failure reason matters; collapsing all failures into one error.
 - Almost never: panic for recoverable I/O/parse/persistence/integration failures; swallow errors; convert every error to a `String` and lose structure.
+
+```rust
+#[derive(Debug, thiserror::Error)]
+pub enum SendError {
+    #[error("validation failed: {0}")]
+    Invalid(String),
+    #[error("rejected by provider: {code}")]
+    Rejected { code: String },
+    #[error(transparent)]
+    Transport(#[from] std::io::Error),   // cause preserved; callers use `?`
+}
+
+// Callers distinguish outcomes via the enum, not by parsing strings.
+fn send(req: &Request) -> Result<Receipt, SendError> {
+    let body = encode(req).map_err(|e| SendError::Invalid(e.to_string()))?;
+    transport.post(body)?; // `?` converts io::Error -> SendError::Transport
+    Ok(Receipt::new())
+}
+```
 
 ## 12. Panic, `unwrap`, `expect`, `todo`, `unreachable`
 

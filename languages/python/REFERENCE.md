@@ -128,11 +128,40 @@ Names must reveal intent; packages reflect architecture.
 - None: use `None` only when absence is legitimate and tested; annotate optional values explicitly; validate required values before constructing objects; avoid returning `None` for failure when callers need a reason; distinguish missing/null/empty/zero where they differ; avoid `x or default` when `0`/`False`/empty are valid.
 - Mutability: avoid mutable default arguments; do not expose internal mutable collections; copy/freeze at boundaries when ownership is unclear; make mutation methods explicit; avoid global mutable state; use frozen dataclasses/tuples for value objects.
 
+```python
+from dataclasses import dataclass
+from enum import StrEnum
+
+@dataclass(frozen=True)
+class EmployeeId:
+    value: str
+
+    def __post_init__(self) -> None:
+        if not (len(self.value) == 8 and self.value.isdigit()):
+            raise ValueError(f"invalid employee id: {self.value!r}")
+
+class EventStatus(StrEnum):   # closed set; reject unknown strings at the boundary
+    DRAFT = "draft"
+    SIGNED = "signed"
+    SENT = "sent"
+```
+
 ## 8. Error Handling, Assertions, and Imports
 
 - Errors: raise meaningful exceptions; use custom exception classes for failures callers must distinguish; preserve causal chains with `raise ... from ...`; avoid leaking sensitive details; test failure paths; avoid bare `except:`/`except Exception` outside a boundary; use `finally`/context managers for cleanup.
 - Assertions: `assert` is not validation (disabled under `-O`); never use `assert` for external input, permissions, security, or business rules; remove `TODO`/`FIXME`/placeholders/`breakpoint()`/`print` before completion; `sys.exit` only at CLI/process entrypoints.
 - Imports: keep top-level module code lightweight; avoid network/filesystem/DB/logging-config/thread/task creation at import time; avoid circular imports; do not shadow standard-library modules (`json.py`, `logging.py`, etc.); libraries must not configure root logging on import.
+
+```python
+class DomainError(Exception): ...
+class ValidationError(DomainError): ...
+
+def parse_event(payload: Mapping[str, object]) -> Event:
+    try:
+        return Event.from_mapping(payload)
+    except KeyError as exc:                       # preserve cause
+        raise ValidationError(f"missing field: {exc}") from exc
+```
 
 ## 9. Runtime Validation and Serialization
 
