@@ -1,0 +1,48 @@
+# Copy to .github/workflows/quality-gate.yml in the target repo.
+# Enforces REFERENCE.md Normative Core MUST items 1-6.
+name: quality-gate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: erlef/setup-beam@v1
+        with:
+          elixir-version: "1.16"   # set to the project version
+          otp-version: "26"
+
+      - name: Cache deps and PLT
+        uses: actions/cache@v4
+        with:
+          path: |
+            deps
+            _build
+          key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
+
+      - name: Install (MUST 1)
+        run: mix deps.get
+
+      - name: Compile with warnings as errors (MUST 1)
+        run: mix compile --warnings-as-errors
+
+      - name: Format check (MUST 2)
+        run: mix format --check-formatted
+
+      - name: Credo (MUST 3, 6)
+        run: mix credo --strict
+
+      - name: Dialyzer (MUST 3)
+        run: mix dialyzer
+
+      - name: Tests + coverage (MUST 4-5)
+        run: mix test --cover
+
+      - name: Dependency audit
+        run: mix deps.audit

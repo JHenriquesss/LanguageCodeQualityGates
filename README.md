@@ -21,6 +21,7 @@ machine-readable manifest, and enforceable configs).
 | C | [`languages/c/`](languages/c/) |
 | C++ | [`languages/cpp/`](languages/cpp/) |
 | PHP | [`languages/php/`](languages/php/) |
+| Elixir | [`languages/elixir/`](languages/elixir/) |
 
 ## What's in each folder
 

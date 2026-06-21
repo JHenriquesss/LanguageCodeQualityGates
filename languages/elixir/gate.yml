@@ -1,0 +1,92 @@
+# Machine-readable manifest for the Elixir quality gate.
+# Parseable by an LLM or CI to produce a deterministic plan/review checklist.
+# Human detail: CORE.md (summary) and REFERENCE.md (full). Enforcement: configs/.
+language: elixir
+core: CORE.md
+reference: REFERENCE.md
+configs: configs/
+score_scale: 0-100
+
+commands:
+  build: mix deps.get && mix compile --warnings-as-errors
+  format: mix format --check-formatted
+  static: mix credo --strict && mix dialyzer
+  test: mix test
+  coverage: mix test --cover    # or: mix coveralls
+  security: mix deps.audit && mix sobelow --config   # mix_audit + sobelow (Phoenix)
+
+must:
+  1: compiles clean under the project Elixir/OTP version (mix compile --warnings-as-errors), mix deps.get clean
+  2: formatting passes (mix format --check-formatted)
+  3: static analysis passes (mix credo --strict, mix dialyzer), findings fixed or justified
+  4: tests pass, meaningful, include failure paths (mix test)
+  5: coverage meets risk tier (mix test --cover / excoveralls)
+  6: complexity within limits (Credo) or justified
+  7: architecture boundaries preserved, business rules out of controllers/templates/schemas, contexts respected
+  8: untrusted input validated, never converted to atoms, deserialized safely
+  9: no secrets committed, no sensitive data logged
+  10: errors via tagged tuples and handled (with/case), processes supervised, @spec on public functions, no swallowed errors
+  11: PHASE-RESULT.md created with command evidence and residual risk
+
+must_not:
+  - declare complete merely because it compiles or ran once
+  - ignore a failed command or skip one without documenting the blocker
+  - ignore compiler warnings (use --warnings-as-errors); broadly disable Credo checks to pass
+  - String.to_atom/List.to_atom on untrusted input (atom-table exhaustion)
+  - Code.eval_string/eval_quoted on untrusted input
+  - :erlang.binary_to_term on untrusted data without :safe (remote code execution)
+  - unsupervised processes for work that must not be lost; rescue/catch everything and swallow it
+  - ignore an {:error, _} return; business rules in controllers/templates; interpolated SQL fragments (use parameterized Ecto)
+
+risk_tiers:
+  low:
+    examples: pure functions, simple structs, internal refactors, throwaway scripts
+    must: [1, 2, 3, 4, 9, 10, 11]
+  medium:
+    examples: context functions, validation, persistence/external adapters, GenServers
+    must: [1, 2, 3, 4, 5, 7, 8, 9, 10, 11]
+  high:
+    examples: core business rules, state machines, authorization, money/time logic, supervision trees
+    must: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    add: [edge-case tests, regression tests, coverage thresholds, architecture checks, process/crash tests]
+  critical:
+    examples: security, auth, crypto, payments, financial, audit, data integrity, distributed state
+    must: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    add: [golden/contract tests, error/rejection paths, audit/traceability, property tests, dependency/SAST audit, mutation tests]
+
+complexity:               # enforced by Credo
+  function_cyclomatic_max: 10
+  function_nesting_max: 3
+  function_lines_max: 50
+  module_lines_max: 500
+  file_lines_max: 600
+  function_arity_max: 6
+  public_functions_per_module_max: 15
+
+coverage:
+  domain:         {line: 90, branch: 85, mutation: 80}
+  critical:       {line: 95, branch: 90, mutation: 85}
+  application:    {line: 85, branch: 80, mutation: 75}
+  infrastructure: {line: 70, branch: 60, mutation: when_practical}
+  controllers:    {line: 70, branch: 60, mutation: usually_not_required}
+  generated:      exclude_with_reason
+
+score_caps:               # max score when the evidence is missing/failed
+  does_not_compile_or_warnings_unjustified: 30
+  main_tests_not_run: 40
+  no_meaningful_tests: 55
+  formatting_not_checked_unexplained: 65
+  credo_not_run_unexplained: 65
+  dialyzer_not_run_where_types_matter_unexplained: 70
+  business_rules_without_unit_tests: 60
+  untrusted_input_not_validated_or_converted_to_atoms: 70
+  context_boundaries_unclear: 70
+  no_coverage_evidence: 75
+  unsupervised_process_or_swallowed_error_in_critical_path: 80
+  critical_rules_without_edge_case_failure_tests: 80
+  security_dependency_audit_missing: 85
+  mutation_missing_for_critical_unjustified: 85
+  known_critical_bug_remains: 55
+  known_security_issue_remains: 45
+  secrets_committed: 20
+  phase_result_missing: 50

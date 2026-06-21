@@ -1,0 +1,42 @@
+# Merge these into the project's mix.exs. Pairs with REFERENCE.md (MUST 1, 3, 5).
+
+# In project/0:
+#
+#   def project do
+#     [
+#       app: :my_app,
+#       elixir: "~> 1.16",
+#       elixirc_options: [warnings_as_errors: true],   # MUST 1: warnings are a hard gate
+#       test_coverage: [tool: ExCoveralls],            # MUST 5
+#       dialyzer: [plt_add_apps: [:mix, :ex_unit]],    # MUST 3
+#       preferred_cli_env: [coveralls: :test, "coveralls.html": :test],
+#       deps: deps()
+#     ]
+#   end
+
+# In deps/0:
+#
+#   defp deps do
+#     [
+#       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
+#       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
+#       {:excoveralls, "~> 0.18", only: :test},
+#       {:mix_audit, "~> 2.1", only: [:dev, :test], runtime: false},
+#       {:sobelow, "~> 0.13", only: [:dev, :test], runtime: false}  # Phoenix apps
+#     ]
+#   end
+
+# Optional aliases to run the whole gate with one command:
+#
+#   defp aliases do
+#     [
+#       gate: [
+#         "format --check-formatted",
+#         "compile --warnings-as-errors",
+#         "credo --strict",
+#         "dialyzer",
+#         "test --cover",
+#         "deps.audit"
+#       ]
+#     ]
+#   end
