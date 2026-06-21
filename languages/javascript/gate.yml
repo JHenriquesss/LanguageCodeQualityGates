@@ -1,0 +1,93 @@
+# Machine-readable manifest for the JavaScript quality gate.
+# Parseable by an LLM or CI to produce a deterministic plan/review checklist.
+# Human detail: CORE.md (summary) and REFERENCE.md (full). Enforcement: configs/.
+language: javascript
+core: CORE.md
+reference: REFERENCE.md
+configs: configs/
+score_scale: 0-100
+
+commands:
+  install: npm ci
+  format: prettier --check .
+  lint: eslint . --max-warnings=0
+  typecheck: tsc --checkJs --noEmit    # optional: only where the project type-checks JS via JSDoc
+  test: npm test
+  coverage: npm run test:coverage
+  security: npm audit --audit-level=high
+
+must:
+  1: parses and runs under the project Node version (no syntax errors, npm ci clean); new code uses ESM/const/let not var
+  2: formatting passes (prettier --check)
+  3: eslint passes with no warnings (eslint . --max-warnings=0); tsc --checkJs where JSDoc typing is used
+  4: tests pass, meaningful, include failure paths
+  5: coverage meets risk tier (c8/istanbul)
+  6: complexity within limits or justified
+  7: architecture boundaries preserved, business rules out of handlers/components/persistence/serialization
+  8: every untrusted boundary validated at runtime (no static types)
+  9: no secrets committed or bundled to client, no sensitive data logged
+  10: failures modeled, promises awaited/handled, strict equality (===), no swallowed errors
+  11: PHASE-RESULT.md created with command evidence and residual risk
+
+must_not:
+  - declare complete merely because the code runs
+  - ignore a failed command or skip one without documenting the blocker
+  - broadly suppress ESLint diagnostics (/* eslint-disable */) to pass
+  - eval, new Function, or dynamic code from input
+  - use ==/!= where ===/!== is required; use var; trust unvalidated external data
+  - leave floating promises; allow prototype pollution (merging untrusted data into objects)
+  - business rules in handlers/components; ship secrets in client bundles
+
+risk_tiers:
+  low:
+    examples: formatting helpers, simple display logic, internal non-critical refactors
+    must: [1, 2, 3, 4, 9, 10, 11]
+  medium:
+    examples: application services, validation, persistence/external adapters, API handlers
+    must: [1, 2, 3, 4, 5, 7, 8, 9, 10, 11]
+  high:
+    examples: core business rules, state machines, authorization, money/time logic
+    must: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    add: [edge-case tests, regression tests, coverage thresholds, architecture checks, JSDoc type-checking where used]
+  critical:
+    examples: security, auth, crypto, payments, financial, audit, data integrity
+    must: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    add: [golden/contract tests, error/rejection paths, audit/traceability, injection/XSS tests, async cancellation/timeout tests, dependency audit, mutation tests]
+
+complexity:               # enforced by ESLint
+  function_cyclomatic_max: 10
+  function_lines_max: 50
+  file_lines_max: 600
+  parameters_max: 6
+  nesting_depth_max: 3
+  nested_callbacks_max: 3
+  public_exports_per_module_max: 15
+
+coverage:
+  domain:         {line: 90, branch: 85, mutation: 80}
+  critical:       {line: 95, branch: 90, mutation: 85}
+  application:    {line: 85, branch: 80, mutation: 75}
+  infrastructure: {line: 70, branch: 60, mutation: when_practical}
+  handlers:       {line: 70, branch: 60, mutation: usually_not_required}
+  generated:      exclude_with_reason
+
+score_caps:               # max score when the evidence is missing/failed
+  syntax_error_or_wrong_node_version: 30
+  main_tests_not_run: 40
+  no_meaningful_tests: 55
+  eslint_not_run_unexplained: 60
+  formatting_not_run_unexplained: 65
+  business_rules_without_unit_tests: 60
+  runtime_validation_missing_at_new_boundaries: 70
+  architecture_boundaries_unclear: 70
+  no_coverage_evidence: 75
+  floating_promises_or_unhandled_rejections: 75
+  loose_equality_in_security_or_money_logic: 80
+  var_eval_or_broad_eslint_disable_used: 75
+  critical_rules_without_edge_case_failure_tests: 80
+  security_dependency_audit_missing: 85
+  mutation_missing_for_critical_unjustified: 85
+  known_critical_bug_remains: 55
+  known_security_issue_remains: 45
+  secrets_committed_or_bundled: 20
+  phase_result_missing: 50

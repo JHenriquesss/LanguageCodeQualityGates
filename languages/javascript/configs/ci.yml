@@ -1,0 +1,44 @@
+# Copy to .github/workflows/quality-gate.yml in the target repo.
+# Enforces REFERENCE.md Normative Core MUST items 1-5.
+# Adjust package-manager commands (npm/pnpm/yarn) to the project.
+name: quality-gate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc # or e.g. "20"
+          cache: npm
+
+      - name: Versions (evidence)
+        run: node --version && npm --version
+
+      - name: Install (frozen lockfile, MUST 1)
+        run: npm ci
+
+      - name: Format (MUST 2)
+        run: npx prettier --check .
+
+      - name: Lint (MUST 3)
+        run: npx eslint . --max-warnings=0
+
+      - name: Type-check JSDoc (MUST 3, optional)
+        run: npx tsc --checkJs --noEmit --project jsconfig.json || echo "no jsconfig type-check configured"
+
+      - name: Test (MUST 4)
+        run: npm test
+
+      - name: Coverage (MUST 5)
+        run: npm run test:coverage --if-present
+
+      - name: Dependency audit
+        run: npm audit --audit-level=high

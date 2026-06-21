@@ -1,0 +1,15 @@
+{
+  "//": "Optional gradual typing for plain JS via JSDoc. With checkJs, `tsc --checkJs --noEmit` (or an editor) reports type errors from JSDoc annotations. Pairs with REFERENCE.md (MUST 3, high tier).",
+  "compilerOptions": {
+    "checkJs": true,
+    "noEmit": true,
+    "allowJs": true,
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "target": "es2022",
+    "strict": true,
+    "noImplicitAny": false
+  },
+  "include": ["src/**/*.js", "src/**/*.mjs"],
+  "exclude": ["node_modules", "dist", "build", "coverage"]
+}

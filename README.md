@@ -22,6 +22,7 @@ machine-readable manifest, and enforceable configs).
 | C++ | [`languages/cpp/`](languages/cpp/) |
 | PHP | [`languages/php/`](languages/php/) |
 | Elixir | [`languages/elixir/`](languages/elixir/) |
+| JavaScript | [`languages/javascript/`](languages/javascript/) |
 
 ## What's in each folder
 
