@@ -20,6 +20,7 @@ machine-readable manifest, and enforceable configs).
 | Ruby | [`languages/ruby/`](languages/ruby/) |
 | C | [`languages/c/`](languages/c/) |
 | C++ | [`languages/cpp/`](languages/cpp/) |
+| PHP | [`languages/php/`](languages/php/) |
 
 ## What's in each folder
 

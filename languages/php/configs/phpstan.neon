@@ -1,0 +1,13 @@
+# Static analysis — the heart of the PHP gate. Run: vendor/bin/phpstan analyse
+# Pairs with REFERENCE.md (Normative Core MUST 3). PHPStan is gradual: raise the
+# level over time; high-risk code should reach max. Do not dump findings into a
+# baseline to pass — fix or justify them.
+parameters:
+    level: max          # 0..9/max; start lower on legacy code, target max for new code
+    paths:
+        - src
+    # Catch type-juggling and unsafe assumptions rather than trusting PHPDoc.
+    treatPhpDocTypesAsCertain: false
+    checkUninitializedProperties: true
+    reportUnmatchedIgnoredErrors: true
+    # ignoreErrors: []   # narrow, justified entries only — never a mass baseline

@@ -1,0 +1,92 @@
+# Machine-readable manifest for the PHP quality gate.
+# Parseable by an LLM or CI to produce a deterministic plan/review checklist.
+# Human detail: CORE.md (summary) and REFERENCE.md (full). Enforcement: configs/.
+language: php
+core: CORE.md
+reference: REFERENCE.md
+configs: configs/
+score_scale: 0-100
+
+commands:
+  lint: php -l <files> && composer install --no-interaction
+  format: vendor/bin/php-cs-fixer fix --dry-run --diff   # or: vendor/bin/pint --test
+  static: vendor/bin/phpstan analyse                     # or: vendor/bin/psalm
+  test: vendor/bin/phpunit                               # or: vendor/bin/pest
+  coverage: XDEBUG_MODE=coverage vendor/bin/phpunit --coverage-text
+  security: composer audit
+  complexity: vendor/bin/phpmd src text configs/phpmd.xml
+
+must:
+  1: runs under the project PHP version (php -l clean, composer install clean), new files declare strict_types=1
+  2: formatting passes (php-cs-fixer/phpcs/pint in check mode)
+  3: static analysis passes at the project level (phpstan/psalm), findings fixed or justified not baselined
+  4: tests pass, meaningful, include failure paths (phpunit/pest)
+  5: coverage meets risk tier (Xdebug/PCOV)
+  6: complexity within limits or justified
+  7: architecture boundaries preserved, business rules out of controllers/templates/ORM models
+  8: untrusted input validated, output escaped at the boundary
+  9: no secrets committed, no sensitive data logged
+  10: typed exceptions, no '@' suppression, strict comparisons (===), no swallowed failures
+  11: PHASE-RESULT.md created with command evidence and residual risk
+
+must_not:
+  - declare complete merely because the code loads or a page renders
+  - ignore a failed command or skip one without documenting the blocker
+  - broadly suppress static-analysis findings (mass-baseline) or use the '@' operator to pass
+  - eval, assert on a string, unserialize on untrusted data, extract() on request data, variable variables on untrusted input
+  - build SQL by string interpolation (use prepared statements/binding)
+  - use '==' where '===' is required (type juggling); business rules in templates; mutable global state
+
+risk_tiers:
+  low:
+    examples: helpers, simple value objects, internal refactors, throwaway scripts
+    must: [1, 2, 3, 9, 10, 11]
+  medium:
+    examples: application services, validation, persistence/external adapters, controllers
+    must: [1, 2, 3, 4, 5, 7, 8, 9, 10, 11]
+  high:
+    examples: core business rules, state machines, authorization, money/time logic
+    must: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    add: [edge-case tests, regression tests, coverage thresholds, architecture checks, higher static-analysis level]
+  critical:
+    examples: security, auth, crypto, payments, financial, audit, data integrity
+    must: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    add: [golden/contract tests, error/rejection paths, audit/traceability, injection/XSS tests, dependency audit, mutation tests]
+
+complexity:               # enforced by PHPMD
+  method_cyclomatic_max: 10
+  method_npath_max: 15
+  method_lines_max: 50
+  class_lines_max: 500
+  file_lines_max: 600
+  parameters_max: 6
+  nesting_depth_max: 3
+  public_methods_per_class_max: 15
+
+coverage:
+  domain:         {line: 90, branch: 85, mutation: 80}
+  critical:       {line: 95, branch: 90, mutation: 85}
+  application:    {line: 85, branch: 80, mutation: 75}
+  infrastructure: {line: 70, branch: 60, mutation: when_practical}
+  controllers:    {line: 70, branch: 60, mutation: usually_not_required}
+  generated:      exclude_with_reason
+
+score_caps:               # max score when the evidence is missing/failed
+  php_lint_fails_or_wrong_version: 30
+  main_tests_not_run: 40
+  no_meaningful_tests: 55
+  static_analysis_not_run_unexplained: 65
+  formatting_not_run_unexplained: 65
+  business_rules_without_unit_tests: 60
+  untrusted_input_not_validated_or_escaped: 70
+  architecture_boundaries_unclear: 70
+  no_coverage_evidence: 75
+  error_suppression_or_mass_baseline_used: 75
+  loose_comparison_in_security_or_money_logic: 80
+  critical_rules_without_edge_case_failure_tests: 80
+  security_dependency_audit_missing: 85
+  mutation_missing_for_critical_unjustified: 85
+  known_critical_bug_remains: 55
+  known_security_issue_remains: 45
+  secrets_committed: 20
+  phase_result_missing: 50

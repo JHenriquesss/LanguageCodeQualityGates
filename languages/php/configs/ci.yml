@@ -1,0 +1,44 @@
+# Copy to .github/workflows/quality-gate.yml in the target repo.
+# Enforces REFERENCE.md Normative Core MUST items 1-6.
+name: quality-gate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"   # set to the project version
+          coverage: xdebug
+          tools: composer, php-cs-fixer, phpstan, phpmd
+
+      - name: Versions (evidence)
+        run: php --version && composer --version
+
+      - name: Install (frozen)
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Lint (MUST 1)
+        run: find src tests -name '*.php' -print0 | xargs -0 -n1 -P4 php -l
+
+      - name: Format (MUST 2)
+        run: vendor/bin/php-cs-fixer fix --dry-run --diff
+
+      - name: Static analysis (MUST 3)
+        run: vendor/bin/phpstan analyse --no-progress
+
+      - name: Tests + coverage (MUST 4-5)
+        run: XDEBUG_MODE=coverage vendor/bin/phpunit --coverage-text
+
+      - name: Complexity (MUST 6)
+        run: vendor/bin/phpmd src text configs/phpmd.xml
+
+      - name: Dependency audit
+        run: composer audit
