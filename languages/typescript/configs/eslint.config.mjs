@@ -5,14 +5,27 @@ import tseslint from "typescript-eslint";
 
 export default tseslint.config(
   {
-    ignores: ["dist/**", "build/**", "coverage/**", "**/*.generated.*"],
+    // Config files and build output are not type-checked source.
+    ignores: [
+      "dist/**",
+      "build/**",
+      "coverage/**",
+      "**/*.generated.*",
+      "**/*.config.{js,cjs,mjs,ts}",
+      "eslint.config.{js,cjs,mjs}",
+    ],
   },
-  ...tseslint.configs.strictTypeChecked,
-  ...tseslint.configs.stylisticTypeChecked,
   {
+    // Typed linting applies only to TypeScript source.
+    files: ["**/*.ts", "**/*.tsx", "**/*.mts", "**/*.cts"],
+    extends: [
+      ...tseslint.configs.strictTypeChecked,
+      ...tseslint.configs.stylisticTypeChecked,
+    ],
     languageOptions: {
       parserOptions: {
         projectService: true,
+        tsconfigRootDir: import.meta.dirname,
       },
     },
     rules: {

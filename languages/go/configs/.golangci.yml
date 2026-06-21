@@ -32,6 +32,15 @@ linters:
     gosec:
       excludes: []
 
+  exclusions:
+    rules:
+      # Missing doc comments are not a hard gate; keep revive's correctness rules.
+      - linters: [revive]
+        text: "should have a (package )?comment|comment on exported"
+      # Tests legitimately use helpers/patterns these linters over-flag.
+      - path: _test\.go
+        linters: [funlen, gosec]
+
 issues:
   max-issues-per-linter: 0
   max-same-issues: 0
