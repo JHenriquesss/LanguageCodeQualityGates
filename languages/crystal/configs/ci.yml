@@ -1,0 +1,39 @@
+# Copy to .github/workflows/quality-gate.yml in the target repo.
+# Enforces REFERENCE.md Normative Core MUST items 1-4 (and 5 where kcov is set up).
+name: quality-gate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: crystal-lang/install-crystal@v1
+        with:
+          crystal: latest   # set to the project version
+
+      - name: Versions (evidence)
+        run: crystal --version && shards --version
+
+      - name: Install dependencies (MUST 1)
+        run: shards install
+
+      - name: Format check (MUST 2)
+        run: crystal tool format --check
+
+      - name: Build — type and Nil checks (MUST 1)
+        run: crystal build src/main.cr -o /dev/null
+
+      - name: Ameba static analysis (MUST 3)
+        run: bin/ameba
+
+      - name: Tests (MUST 4)
+        run: crystal spec
+
+      # Coverage (MUST 5) — Crystal lacks first-class coverage tooling; add a kcov
+      # step here where it works, otherwise document the gap in PHASE-RESULT.md.

@@ -1,0 +1,28 @@
+# Ameba (Crystal linter) config for the quality gate. Run: bin/ameba  (or: ameba)
+# Pairs with REFERENCE.md (MUST 3, 6 + Complexity Limits).
+Globs:
+  - "src/**/*.cr"
+  - "spec/**/*.cr"
+
+Excluded:
+  - lib
+
+# Complexity limit (doc maximum).
+Metrics/CyclomaticComplexity:
+  Enabled: true
+  MaxComplexity: 10
+
+# High-value correctness/clarity checks (Ameba enables most by default;
+# these are called out so they are not accidentally turned off).
+Lint/UnusedArgument:
+  Enabled: true
+Lint/ShadowingOuterLocalVar:
+  Enabled: true
+Lint/UselessAssign:
+  Enabled: true
+Lint/DebuggerStatement:
+  Enabled: true
+Lint/NotNil:               # discourage .not_nil! — handle Nil explicitly
+  Enabled: true
+Style/IsAClassMethod:
+  Enabled: true

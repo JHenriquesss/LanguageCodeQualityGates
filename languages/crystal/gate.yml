@@ -1,0 +1,90 @@
+# Machine-readable manifest for the Crystal quality gate.
+# Parseable by an LLM or CI to produce a deterministic plan/review checklist.
+# Human detail: CORE.md (summary) and REFERENCE.md (full). Enforcement: configs/.
+language: crystal
+core: CORE.md
+reference: REFERENCE.md
+configs: configs/
+score_scale: 0-100
+
+commands:
+  build: shards install && crystal build src/main.cr   # type + Nil checks happen at compile time
+  format: crystal tool format --check
+  static: bin/ameba                                     # or: ameba
+  test: crystal spec
+  coverage: kcov ./coverage bin/test                    # where kcov is available; otherwise document
+  security: shards outdated && shards check             # plus review of dependency advisories
+
+must:
+  1: compiles clean under the project Crystal version (crystal build, warnings addressed), shards install clean
+  2: formatting passes (crystal tool format --check)
+  3: static analysis passes (ameba); compiler type/Nil checks part of the gate; findings fixed or justified
+  4: tests pass, meaningful, include failure paths (crystal spec)
+  5: coverage meets risk tier (kcov where available, else documented)
+  6: complexity within limits (Ameba) or justified
+  7: architecture boundaries preserved, business rules out of controllers/views/ORM models
+  8: untrusted input validated, Nil handled explicitly (no .not_nil! on untrusted values)
+  9: no secrets committed, no sensitive data logged
+  10: errors via exceptions/result unions handled, Nil unions handled, type restrictions on public methods, no swallowed rescue
+  11: PHASE-RESULT.md created with command evidence and residual risk
+
+must_not:
+  - declare complete merely because it compiles or ran once
+  - ignore a failed command or skip one without documenting the blocker
+  - ignore compiler warnings; broadly disable Ameba checks to pass
+  - .not_nil! to bypass Nil safety on values that can be nil
+  - abuse macros to hide business logic; pointerof/unsafe pointer ops or C bindings without isolation and justification
+  - spawn unbounded fibers, or share mutable state across fibers without a Channel/Mutex
+  - rescue and swallow everything; ignore an error return; business rules in controllers/views; interpolated SQL (use parameterized crystal-db)
+
+risk_tiers:
+  low:
+    examples: pure functions, simple structs, internal refactors, throwaway scripts
+    must: [1, 2, 3, 4, 9, 10, 11]
+  medium:
+    examples: application services, validation, persistence/external adapters, fiber workers
+    must: [1, 2, 3, 4, 5, 7, 8, 9, 10, 11]
+  high:
+    examples: core business rules, state machines, authorization, money/time logic
+    must: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    add: [edge-case tests, regression tests, coverage thresholds, architecture checks, concurrency tests]
+  critical:
+    examples: security, auth, crypto, payments, financial, audit, data integrity
+    must: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    add: [golden/contract tests, error/rejection paths, audit/traceability, injection tests, dependency audit, property tests]
+
+complexity:               # enforced by Ameba where available, else review
+  method_cyclomatic_max: 10
+  method_lines_max: 50
+  class_struct_lines_max: 500
+  file_lines_max: 600
+  parameters_max: 6
+  nesting_depth_max: 3
+  public_methods_per_type_max: 15
+
+coverage:
+  domain:         {line: 90, branch: 85, note: kcov where available}
+  critical:       {line: 95, branch: 90, note: property tests for parsers}
+  application:    {line: 85, branch: 80, note: ""}
+  infrastructure: {line: 70, branch: 60, note: when_practical}
+  controllers:    {line: 70, branch: 60, note: usually_not_required}
+  generated:      exclude_with_reason
+
+score_caps:               # max score when the evidence is missing/failed
+  does_not_compile_or_warnings_unaddressed: 30
+  main_tests_not_run: 40
+  no_meaningful_tests: 55
+  ameba_not_run_unexplained: 65
+  formatting_not_checked_unexplained: 65
+  business_rules_without_unit_tests: 60
+  untrusted_input_not_validated_or_not_nil_bang: 70
+  architecture_boundaries_unclear: 70
+  no_coverage_evidence_or_limitation_undocumented: 75
+  fibers_sharing_state_without_sync_or_swallowed_error: 80
+  critical_rules_without_edge_case_failure_tests: 80
+  security_dependency_audit_missing: 85
+  property_mutation_missing_for_critical_unjustified: 85
+  known_critical_bug_remains: 55
+  known_security_issue_remains: 45
+  secrets_committed: 20
+  phase_result_missing: 50
