@@ -63,9 +63,9 @@ complexity:
   public_functions_per_header_max: 15
 
 coverage:
-  core:    {line: 90, branch: 85, note: fuzz untrusted parsers}
-  critical:{line: 95, branch: 90, note: fuzz required}
-  library: {line: 85, branch: 80, note: when_practical}
+  core:     {line: 90, branch: 85, note: fuzz untrusted parsers}
+  critical: {line: 95, branch: 90, note: fuzz required}
+  library:  {line: 85, branch: 80, note: when_practical}
   glue:    {line: 70, branch: 60, note: usually_not_required}
   generated: exclude_with_reason
 
