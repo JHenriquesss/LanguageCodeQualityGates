@@ -18,6 +18,13 @@ select = [
 ]
 # MUST NOT: do not blanket-ignore. Narrow per-line ignores only.
 
+[tool.ruff.lint.per-file-ignores]
+# `assert` is the normal test idiom; S101 only matters in production code.
+"**/test_*.py" = ["S101"]
+"**/*_test.py" = ["S101"]
+"**/tests/**" = ["S101"]
+"**/conftest.py" = ["S101"]
+
 [tool.ruff.lint.mccabe]
 max-complexity = 10   # doc maximum (cyclomatic)
 
