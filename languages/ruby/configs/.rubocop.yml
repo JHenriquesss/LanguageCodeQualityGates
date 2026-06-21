@@ -1,0 +1,65 @@
+# Pairs with REFERENCE.md (Normative Core + Complexity Limits).
+# Run: bundle exec rubocop
+# RuboCop is style + lint + security + complexity in one tool.
+
+AllCops:
+  TargetRubyVersion: 3.3   # set to the project's Ruby version
+  NewCops: enable
+  Exclude:
+    - "vendor/**/*"
+    - "db/schema.rb"
+    - "bin/**/*"
+    - "**/*.generated.rb"
+
+# Deterministic line endings across OSes/CI (pairs with .gitattributes eol=lf).
+# Default 'native' makes the same file pass on Linux and fail on Windows.
+Layout/EndOfLine:
+  EnforcedStyle: lf
+
+# --- Complexity limits (doc maximums) ---
+Metrics/CyclomaticComplexity:
+  Max: 10
+Metrics/PerceivedComplexity:
+  Max: 15
+Metrics/MethodLength:
+  Max: 50
+Metrics/ClassLength:
+  Max: 500
+Metrics/ModuleLength:
+  Max: 500
+Metrics/ParameterLists:
+  Max: 6
+Metrics/BlockNesting:
+  Max: 3
+Metrics/AbcSize:
+  Max: 30   # assignment/branch/condition size; review-tuned
+
+# --- Security cops stay on (MUST NOT items) ---
+Security/Eval:
+  Enabled: true
+Security/Open:
+  Enabled: true
+Security/MarshalLoad:
+  Enabled: true
+Security/YAMLLoad:
+  Enabled: true
+Security/JSONLoad:
+  Enabled: true
+Lint/SuppressedException:   # empty rescue
+  Enabled: true
+Lint/RescueException:       # rescue Exception
+  Enabled: true
+
+# --- Relaxed: missing doc comments and frozen-string magic comments are not a
+#     hard gate. Re-enable in the project if it wants them. (Avoids failing
+#     clean, simple files on style nags rather than real problems.) ---
+Style/Documentation:
+  Enabled: false
+Style/FrozenStringLiteralComment:
+  Enabled: false
+
+# Tests legitimately have long describe/it blocks.
+Metrics/BlockLength:
+  Exclude:
+    - "spec/**/*"
+    - "test/**/*"

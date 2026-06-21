@@ -17,6 +17,7 @@ machine-readable manifest, and enforceable configs).
 | Python | [`languages/python/`](languages/python/) |
 | C# / .NET | [`languages/csharp/`](languages/csharp/) |
 | Java | [`languages/java/`](languages/java/) |
+| Ruby | [`languages/ruby/`](languages/ruby/) |
 
 ## What's in each folder
 

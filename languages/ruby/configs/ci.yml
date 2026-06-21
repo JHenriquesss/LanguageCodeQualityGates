@@ -1,0 +1,42 @@
+# Copy to .github/workflows/quality-gate.yml in the target repo.
+# Enforces REFERENCE.md Normative Core MUST items 1-5.
+name: quality-gate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: .ruby-version   # or e.g. "3.3"
+          bundler-cache: true
+
+      - name: Versions (evidence)
+        run: ruby --version && bundle --version
+
+      - name: Syntax check (MUST 1)
+        run: |
+          find . -name '*.rb' -not -path './vendor/*' -print0 | xargs -0 -n1 ruby -c >/dev/null
+
+      - name: RuboCop — style + lint + security + complexity (MUST 2-3, 6)
+        run: bundle exec rubocop
+
+      - name: Tests (MUST 4)
+        run: bundle exec rspec   # or: bundle exec rake test
+
+      - name: Coverage (MUST 5)
+        run: COVERAGE=1 bundle exec rspec   # SimpleCov minimum_coverage enforces the floor
+        env:
+          CI: "true"
+
+      - name: Dependency vulnerabilities
+        run: |
+          gem install bundler-audit
+          bundle exec bundler-audit check --update

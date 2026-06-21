@@ -1,0 +1,3 @@
+# Normalize line endings to LF on checkout across all platforms.
+# Keeps configs deterministic (e.g. RuboCop Layout/EndOfLine: lf) and stops CRLF churn.
+* text=auto eol=lf
