@@ -1,0 +1,45 @@
+# Copy to .github/workflows/quality-gate.yml in the target repo.
+# Enforces REFERENCE.md Normative Core MUST items 1-5.
+name: quality-gate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang clang-format clang-tidy cppcheck
+
+      - name: Versions (evidence)
+        run: c++ --version && clang-format --version && clang-tidy --version
+
+      - name: Format (MUST 2)
+        run: clang-format --dry-run --Werror $(find src tests -name '*.cpp' -o -name '*.hpp' -o -name '*.h')
+
+      - name: Build with strict warnings (MUST 1)
+        run: c++ -std=c++20 -Wall -Wextra -Werror -Wpedantic -Wconversion -Wshadow -Wold-style-cast -c $(find src -name '*.cpp')
+
+      - name: Static analysis (MUST 3)
+        run: |
+          clang-tidy $(find src -name '*.cpp') -- -std=c++20
+          cppcheck --error-exitcode=1 --enable=warning,style,performance,portability --language=c++ src
+
+      - name: Tests under ASan + UBSan (MUST 4)
+        run: |
+          c++ -std=c++20 -Wall -Wextra -Werror -fsanitize=address,undefined -fno-omit-frame-pointer -g \
+            $(find src tests -name '*.cpp') -o run_tests
+          ASAN_OPTIONS=detect_leaks=1 ./run_tests
+
+      - name: Coverage (MUST 5)
+        run: |
+          c++ -std=c++20 --coverage $(find src tests -name '*.cpp') -o cov_tests
+          ./cov_tests
+          llvm-cov gcov $(find src -name '*.cpp')

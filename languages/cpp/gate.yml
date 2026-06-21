@@ -1,0 +1,89 @@
+# Machine-readable manifest for the C++ quality gate.
+# Parseable by an LLM or CI to produce a deterministic plan/review checklist.
+# Human detail: CORE.md (summary) and REFERENCE.md (full). Enforcement: configs/.
+language: cpp
+core: CORE.md
+reference: REFERENCE.md
+configs: configs/
+score_scale: 0-100
+
+commands:
+  build: c++ -std=c++20 -Wall -Wextra -Werror -Wpedantic -Wconversion -Wshadow -c <sources>
+  format: clang-format --dry-run --Werror <sources>
+  static: clang-tidy <sources> -- -std=c++20    # and/or: cppcheck --error-exitcode=1 --enable=warning,style src
+  test: c++ -std=c++20 -fsanitize=address,undefined -g <sources> tests && ./tests
+  coverage: c++ -std=c++20 --coverage <sources> tests && ./tests && llvm-cov gcov <sources>
+  memcheck: ASAN_OPTIONS=detect_leaks=1 ./tests   # or valgrind --leak-check=full ./tests
+
+must:
+  1: compiles clean with -Wall -Wextra -Werror -Wpedantic -Wconversion under the project C++ standard
+  2: formatting passes (clang-format --dry-run --Werror)
+  3: static analysis passes (clang-tidy cppcoreguidelines/bugprone, cppcheck), findings fixed or justified
+  4: tests pass, meaningful, include failure paths; run under ASan + UBSan
+  5: coverage meets risk tier (llvm-cov/gcov)
+  6: complexity within limits or justified
+  7: architecture boundaries preserved, headers expose minimal API
+  8: untrusted input validated (length, bounds, integer ranges)
+  9: no secrets committed, no sensitive data logged, secrets zeroized
+  10: RAII for all resources, ownership explicit (smart pointers), no leaks/UAF/double-free/dangling, rule of 0/3/5
+  11: PHASE-RESULT.md created with command evidence and residual risk
+
+must_not:
+  - declare complete merely because it compiles or ran once
+  - ignore a failed command or skip one without documenting the blocker
+  - disable -Werror or suppress warnings to pass
+  - owning raw pointers, new/delete, or manual memory management in application code; C-style casts
+  - buffer overflow, out-of-bounds, use-after-free, double-free, memory leak
+  - uninitialized read, integer overflow, dangling reference/string_view/span, iterator invalidation
+  - object slicing, data race, throwing destructor, narrowing conversion
+
+risk_tiers:
+  low:
+    examples: pure helpers, simple value types, internal refactors, throwaway tools
+    must: [1, 2, 3, 4, 9, 10, 11]
+  medium:
+    examples: classes owning resources, parsers of trusted input, library APIs
+    must: [1, 2, 3, 4, 5, 7, 8, 9, 10, 11]
+  high:
+    examples: core logic, templates, move-heavy types, size/index/buffer handling, concurrency
+    must: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    add: [edge-case tests, regression tests, coverage thresholds, integer-overflow and lifetime tests]
+  critical:
+    examples: security, crypto, parsers of untrusted input, network/file-format handling, allocators, lock-free code
+    must: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    add: [fuzzing, golden/contract tests, error-path tests, ThreadSanitizer/MemorySanitizer where relevant, leak checks]
+
+complexity:
+  function_cyclomatic_max: 10
+  function_cognitive_max: 15
+  function_lines_max: 50
+  translation_unit_or_class_lines_max: 600
+  parameters_max: 6
+  nesting_depth_max: 3
+  public_methods_per_class_max: 15
+
+coverage:
+  core:     {line: 90, branch: 85, note: fuzz untrusted parsers}
+  critical: {line: 95, branch: 90, note: fuzz required}
+  library:  {line: 85, branch: 80, note: when_practical}
+  glue:     {line: 70, branch: 60, note: usually_not_required}
+  generated: exclude_with_reason
+
+score_caps:               # max score when the evidence is missing/failed
+  does_not_compile_or_werror_disabled: 30
+  warnings_present_unjustified: 65
+  main_tests_not_run: 40
+  no_meaningful_tests: 55
+  tests_not_run_under_asan_ubsan: 70
+  static_analysis_not_run_unexplained: 70
+  business_parsing_rules_without_unit_tests: 60
+  untrusted_input_not_validated: 70
+  architecture_boundaries_unclear: 70
+  no_coverage_evidence: 75
+  manual_memory_ownership_without_leak_uaf_checks: 80
+  critical_untrusted_input_without_fuzz_or_edge_tests: 85
+  concurrency_without_tsan_data_race_evidence: 85
+  known_critical_bug_remains: 50
+  known_security_issue_remains: 45
+  secrets_committed: 20
+  phase_result_missing: 50

@@ -1,0 +1,33 @@
+# Static analysis. Run: clang-tidy <sources> -- -std=c++20
+# Pairs with REFERENCE.md (Normative Core MUST 3, 6 + Complexity Limits).
+# cppcoreguidelines + bugprone catch the C++ memory-safety, lifetime, and UB classes.
+# A few of the noisiest opinionated checks are disabled so a clean, simple file
+# is not failed on style nags rather than real defects (re-enable per project).
+Checks: >
+  bugprone-*,
+  cppcoreguidelines-*,
+  clang-analyzer-*,
+  performance-*,
+  portability-*,
+  modernize-use-nullptr,
+  modernize-use-override,
+  modernize-use-using,
+  readability-function-cognitive-complexity,
+  readability-function-size,
+  -cppcoreguidelines-avoid-magic-numbers,
+  -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
+  -cppcoreguidelines-pro-bounds-pointer-arithmetic,
+  -cppcoreguidelines-avoid-non-const-global-variables,
+  -bugprone-easily-swappable-parameters
+
+WarningsAsErrors: '*'
+
+CheckOptions:
+  - key: readability-function-cognitive-complexity.Threshold
+    value: '15'        # doc maximum
+  - key: readability-function-size.LineThreshold
+    value: '50'        # doc maximum function length
+  - key: readability-function-size.ParameterThreshold
+    value: '6'         # doc maximum parameters
+  - key: readability-function-size.NestingThreshold
+    value: '3'         # doc maximum nesting depth

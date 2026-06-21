@@ -19,6 +19,7 @@ machine-readable manifest, and enforceable configs).
 | Java | [`languages/java/`](languages/java/) |
 | Ruby | [`languages/ruby/`](languages/ruby/) |
 | C | [`languages/c/`](languages/c/) |
+| C++ | [`languages/cpp/`](languages/cpp/) |
 
 ## What's in each folder
 
