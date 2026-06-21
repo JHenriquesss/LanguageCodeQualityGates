@@ -1,0 +1,16 @@
+# Deterministic formatting. Verify: clang-format --dry-run --Werror <files>
+# Pairs with REFERENCE.md. Adjust to the project's house style if one exists.
+BasedOnStyle: LLVM
+Language: Cpp
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+ColumnLimit: 100
+PointerAlignment: Right
+AlignAfterOpenBracket: Align
+AllowShortFunctionsOnASingleLine: None
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+BreakBeforeBraces: Linux
+SpaceAfterCStyleCast: true
+SortIncludes: true

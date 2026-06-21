@@ -1,0 +1,36 @@
+# Reference Makefile fragment enforcing the C gate. Merge into the project Makefile.
+# Pairs with REFERENCE.md Normative Core (MUST 1-5).
+
+CC      ?= cc
+STD     ?= c17
+# Strict warnings = MUST 1. -Werror makes warnings a hard gate.
+WARN    := -std=$(STD) -Wall -Wextra -Werror -Wpedantic -Wconversion -Wshadow
+# Sanitizers for the test build = MUST 4.
+SAN     := -fsanitize=address,undefined -fno-omit-frame-pointer -g
+
+SRC     := $(wildcard src/*.c)
+TESTSRC := $(wildcard tests/*.c)
+
+.PHONY: build format static test coverage clean
+
+build:                     ## MUST 1: compile clean with strict warnings
+	$(CC) $(WARN) -c $(SRC)
+
+format:                    ## MUST 2
+	clang-format --dry-run --Werror $(SRC) $(TESTSRC)
+
+static:                    ## MUST 3
+	clang-tidy $(SRC) -- -std=$(STD)
+	cppcheck --error-exitcode=1 --enable=warning,style,performance,portability src
+
+test:                      ## MUST 4: tests under ASan + UBSan
+	$(CC) $(WARN) $(SAN) $(SRC) $(TESTSRC) -o run_tests
+	ASAN_OPTIONS=detect_leaks=1 ./run_tests
+
+coverage:                  ## MUST 5
+	$(CC) $(WARN) --coverage $(SRC) $(TESTSRC) -o cov_tests
+	./cov_tests
+	gcov -b $(SRC)
+
+clean:
+	rm -f *.o *.gcno *.gcda *.gcov run_tests cov_tests

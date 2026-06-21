@@ -1,0 +1,26 @@
+# Static analysis. Run: clang-tidy <sources> -- -std=c17
+# Pairs with REFERENCE.md (Normative Core MUST 3, 6 + Complexity Limits).
+# bugprone/cert/clang-analyzer catch the C memory-safety and UB classes.
+Checks: >
+  bugprone-*,
+  cert-*,
+  clang-analyzer-*,
+  misc-*,
+  performance-*,
+  portability-*,
+  readability-function-cognitive-complexity,
+  readability-function-size,
+  readability-non-const-parameter,
+  -clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling
+
+WarningsAsErrors: '*'
+
+CheckOptions:
+  - key: readability-function-cognitive-complexity.Threshold
+    value: '15'        # doc maximum
+  - key: readability-function-size.LineThreshold
+    value: '50'        # doc maximum function length
+  - key: readability-function-size.ParameterThreshold
+    value: '6'         # doc maximum parameters
+  - key: readability-function-size.NestingThreshold
+    value: '3'         # doc maximum nesting depth

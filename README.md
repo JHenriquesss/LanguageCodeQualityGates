@@ -18,6 +18,7 @@ machine-readable manifest, and enforceable configs).
 | C# / .NET | [`languages/csharp/`](languages/csharp/) |
 | Java | [`languages/java/`](languages/java/) |
 | Ruby | [`languages/ruby/`](languages/ruby/) |
+| C | [`languages/c/`](languages/c/) |
 
 ## What's in each folder
 
