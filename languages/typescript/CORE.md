@@ -38,7 +38,7 @@ checks apply and state any intentionally excluded and why.
 - **Low** (formatting helpers, simple display logic, internal non-critical refactors): typecheck, format, lint, basic tests. MUST 1-4, 9-11.
 - **Medium** (application services, validation, persistence/external adapters, API handlers): + failure-path tests, runtime boundary validation, integration, coverage. Add MUST 5, 7, 8.
 - **High** (core business rules, state machines, authorization, money/time logic): + edge-case and regression tests, coverage thresholds, architecture checks, complexity limits. Add MUST 6; tighten 5.
-- **Critical** (security, signing/crypto, legal/financial/compliance, audit, data integrity): + golden/contract tests, error/rejection paths, audit/traceability, async cancellation/timeout tests, mutation or property tests where applicable. Full gate, no skipped checks.
+- **Critical** (security, signing/crypto, financial, audit, data integrity, safety-critical): + golden/contract tests, error/rejection paths, audit/traceability, async cancellation/timeout tests, mutation or property tests where applicable. Full gate, no skipped checks.
 
 ## Score (0-100)
 
@@ -61,7 +61,7 @@ checks apply and state any intentionally excluded and why.
 - 80 if package exports/public API changed without consumer/import tests.
 - 85 if `any`, unsafe assertions, or suppressions were added without clear justification.
 - 85 if async code lacks cancellation/timeout/error-path tests where relevant.
-- 90 if high-risk legal/security/audit code lacks golden/contract/failure-path tests.
+- 90 if high-risk security/financial/audit code lacks golden/contract/failure-path tests.
 
 ## Coverage thresholds
 
@@ -70,7 +70,7 @@ Quality of assertions matters more than raw percentage.
 |Area|Line|Branch|
 |---|---|---|
 |Changed business-critical code|>= 85%|>= 80%|
-|Critical domain/legal/security rules|~100% meaningful branch coverage|—|
+|Critical security/financial/audit rules|~100% meaningful branch coverage|—|
 
 ## Complexity limits
 

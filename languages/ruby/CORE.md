@@ -40,7 +40,7 @@ checks apply and state any intentionally excluded and why.
 - **Low** (helpers, simple value objects, internal refactors, throwaway scripts): load, rubocop, basic tests. MUST 1-4, 9-11.
 - **Medium** (application services, validation, persistence/external adapters, API endpoints): + failure-path tests, boundary validation, integration, coverage. Add MUST 5, 7, 8.
 - **High** (core business rules, state machines, authorization, money/time logic): + edge-case and regression tests, coverage thresholds, architecture checks, complexity limits. Add MUST 6; tighten 5.
-- **Critical** (security, signing/crypto, legal/financial/compliance, audit, data integrity): + golden/contract tests, error/rejection paths, audit/traceability, concurrency/thread-safety tests, mutation tests where applicable. Full gate, no skipped checks.
+- **Critical** (security, signing/crypto, financial, audit, data integrity, safety-critical): + golden/contract tests, error/rejection paths, audit/traceability, concurrency/thread-safety tests, mutation tests where applicable. Full gate, no skipped checks.
 
 ## Score (0-100)
 
@@ -79,7 +79,7 @@ checks apply and state any intentionally excluded and why.
 |Area|Line|Branch|Mutation|
 |---|---|---|---|
 |Domain / business rules|>= 90%|>= 85%|>= 80%|
-|Critical legal/financial/audit/security rules|>= 95%|>= 90%|>= 85%|
+|Critical security/financial/audit rules|>= 95%|>= 90%|>= 85%|
 |Application services|>= 85%|>= 80%|>= 75%|
 |Infrastructure adapters|>= 70%|>= 60%|When practical|
 |API/route handlers|>= 70%|>= 60%|Usually not required|

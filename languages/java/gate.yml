@@ -43,11 +43,11 @@ risk_tiers:
     examples: application services, validation, persistence adapters, API endpoints
     must: [1, 2, 3, 4, 5, 7, 8, 9, 10, 11]
   high:
-    examples: core business rules, payroll/legal logic, state transitions, authorization
+    examples: core business rules, financial/payroll logic, state transitions, authorization
     must: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
     add: [edge-case tests, regression tests, coverage thresholds, architecture checks, mutation where available]
   critical:
-    examples: security, signing/crypto, legal/financial/compliance, audit, data integrity
+    examples: security, signing/crypto, financial, audit, data integrity, safety-critical
     must: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
     add: [golden/contract tests, schema validation, error/rejection paths, audit/traceability, redaction, mutation tests]
 
@@ -82,7 +82,7 @@ score_caps:             # max score when the evidence is missing/failed
   security_dependency_audit_missing: 85
   static_analysis_missing: 85
   mutation_missing_for_critical_unjustified: 85
-  regulatory_payloads_without_golden_contract_tests: 70
+  critical_payloads_without_golden_contract_tests: 70
   known_critical_bug_remains: 60
   known_security_issue_remains: 50
   secrets_committed: 20

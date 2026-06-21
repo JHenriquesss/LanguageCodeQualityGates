@@ -47,7 +47,7 @@ risk_tiers:
     must: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
     add: [edge-case tests, regression tests, coverage thresholds, architecture checks]
   critical:
-    examples: security, signing/crypto, legal/financial/compliance, audit, data integrity, unsafe
+    examples: security, signing/crypto, financial, audit, data integrity, safety-critical, unsafe
     must: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
     add: [golden/contract tests, error/rejection paths, audit/traceability, Miri for unsafe, mutation or fuzz]
 
@@ -86,7 +86,7 @@ score_caps:             # max score when the evidence is missing/failed
   unsafe_without_miri_or_reason: 80
   unwrap_expect_in_recoverable_paths: 80
   panic_for_recoverable_failures: 75
-  regulatory_payloads_without_golden_contract_tests: 70
+  critical_payloads_without_golden_contract_tests: 70
   feature_combinations_untested: 85
   public_api_changed_without_semver: 80
   known_critical_bug_remains: 60

@@ -64,7 +64,7 @@ which checks apply and state any intentionally excluded and why. Detail: "Test T
 - Low (helpers, simple value objects, internal refactors, throwaway scripts): load, rubocop, basic tests. MUST 1-4, 9-11.
 - Medium (application services, validation, persistence/external adapters, API endpoints): add failure-path tests, boundary validation, integration, coverage. Add MUST 5, 7, 8.
 - High (core business rules, state machines, authorization, money/time logic): add edge-case and regression tests, coverage thresholds, architecture checks, complexity limits. Add MUST 6; tighten 5.
-- Critical (security, signing/crypto, legal/financial/compliance, audit, data integrity): add golden/contract tests, error/rejection paths, audit/traceability, concurrency/thread-safety tests, mutation tests where applicable. Full gate, no skipped checks.
+- Critical (security, signing/crypto, financial, audit, data integrity, safety-critical): add golden/contract tests, error/rejection paths, audit/traceability, concurrency/thread-safety tests, mutation tests where applicable. Full gate, no skipped checks.
 
 ## 1. Non-Negotiable Completion Rule
 
@@ -171,7 +171,7 @@ Business rules must be explicit, isolated, and tested.
 - Always: keep dependency direction inward; put business rules in domain/application objects; put side effects in adapters; keep controllers/jobs thin; test boundary mappers; keep framework types out of the domain.
 - Prefer: plain Ruby objects (PORO) for domain logic; service/use-case objects for orchestration; ports (duck-typed interfaces) for persistence, clock, signing, storage, external APIs; explicit mappers between DTOs and domain types.
 - Avoid: controllers calling the ORM for business workflows; infrastructure deciding domain outcomes; ORM records reused as API responses; business rules hidden in callbacks or concerns.
-- Almost never: hide business decisions in SQL, callbacks, or serialization; make domain correctness depend on a web framework; put audit/legal decisions in logging side effects.
+- Almost never: hide business decisions in SQL, callbacks, or serialization; make domain correctness depend on a web framework; put audit decisions in logging side effects.
 
 ## 10. Domain Modeling and Data Structures
 
@@ -180,8 +180,8 @@ booleans, or raw primitives where a meaningful domain type belongs.
 
 - Always: validate invariants at construction; keep required values required; model closed sets with frozen constants, enums, or small classes; distinguish raw input from validated state.
 - Prefer: immutable value objects (e.g. `Data.define`, frozen structs, or plain classes with readers); `Comparable`/value semantics where appropriate; factory methods that return a valid object or raise/return a meaningful error.
-- Avoid: `Hash` (`{}`) and `OpenStruct` as domain models; boolean flags that change behavior; primitive obsession for money, dates, identifiers, and legal codes.
-- Almost never: represent legal/financial/audit state as arbitrary strings; assemble domain objects through a long sequence of setters; use `OpenStruct` in hot or critical paths.
+- Avoid: `Hash` (`{}`) and `OpenStruct` as domain models; boolean flags that change behavior; primitive obsession for money, dates, identifiers, and domain codes.
+- Almost never: represent financial/audit state as arbitrary strings; assemble domain objects through a long sequence of setters; use `OpenStruct` in hot or critical paths.
 
 ## 11. `nil` and Absence Semantics
 
@@ -208,7 +208,7 @@ Ruby uses exceptions. Make them explicit, meaningful, and tested; distinguish pr
 validation failures, domain rejections, and infrastructure failures.
 
 - Always: raise specific exception classes (subclass `StandardError`); preserve cause when re-raising (`raise NewError, msg` inside a `rescue` keeps `$!` as cause); rescue the narrowest class you can handle; test failure paths.
-- Prefer: a small domain exception hierarchy; result objects for expected business outcomes where they clarify flow; `ensure` for cleanup; error codes for auditable/legal failures; mapping infrastructure errors to safe application/API errors at the boundary.
+- Prefer: a small domain exception hierarchy; result objects for expected business outcomes where they clarify flow; `ensure` for cleanup; error codes for auditable failures; mapping infrastructure errors to safe application/API errors at the boundary.
 - Avoid: `rescue => e; end` (swallowing); `rescue nil`; rescuing and returning fake success; logging-and-re-raising at every layer; using exceptions for ordinary control flow in hot paths.
 - Almost never: `rescue Exception` (catches `SignalException`, `NoMemoryError`, etc.); swallow security/persistence/signing failures; leak stack traces, SQL, tokens, or payloads to external clients.
 
@@ -229,7 +229,7 @@ keep it visible and tested.
 - Always: prefer plain methods and composition first; if `method_missing` is used, implement `respond_to_missing?` and constrain it tightly; test generated behavior; keep refinements/monkey-patches isolated and documented.
 - Prefer: `define_method` with a clear, bounded set; refinements over global monkey-patching when extending core classes; explicit `attr_reader`/delegation over dynamic accessors.
 - Avoid: hiding business rules in `method_missing`, `const_missing`, or dynamic dispatch; `send`/`public_send` with method names derived from untrusted input; reopening core classes (`String`, `Hash`, `Object`) to add behavior.
-- Almost never: monkey-patch standard-library or gem internals to change behavior; build legal/financial logic through metaprogramming that maintainers cannot follow; use `eval` to construct code.
+- Almost never: monkey-patch standard-library or gem internals to change behavior; build financial logic through metaprogramming that maintainers cannot follow; use `eval` to construct code.
 
 ## 16. Blocks, Procs, and Enumerables
 
@@ -249,7 +249,7 @@ logical races, deadlocks, lost updates, or unsafe shared state.
 - Always: minimize shared mutable state; protect shared state with `Mutex`; set timeouts on blocking I/O; bound thread/connection pools; make repeated/async processing idempotent; test concurrent behavior.
 - Prefer: immutable data shared across threads; `Queue`/`Concurrent::*` (concurrent-ruby) for safe structures; `Ractor` for true parallelism where applicable; thread pools over unbounded `Thread.new`; explicit shutdown/drain.
 - Avoid: global mutable state across threads; holding a `Mutex` across slow I/O; unbounded thread creation per request; sharing non-thread-safe clients/connections without review.
-- Almost never: fix races with `sleep`; spawn detached threads that fail silently; run legal/financial/audit workflows on unsupervised background threads.
+- Almost never: fix races with `sleep`; spawn detached threads that fail silently; run financial/audit workflows on unsupervised background threads.
 
 ## 18. Resource Management
 
@@ -268,7 +268,7 @@ model, and never deserialize untrusted data unsafely.
 - Always: use DTOs/explicit mappers at boundaries; validate decoded data before domain use; treat unknown/missing fields deliberately; test encode and decode, including malformed input.
 - Prefer: `JSON.parse` for interchange; `YAML.safe_load` for YAML; explicit `to_h`/`as_json` for output; golden tests for stable payloads; schema validation where applicable.
 - Avoid: `Marshal.load`, `YAML.load` (unsafe), or `JSON.load` on untrusted data; using ORM/records as API DTOs by default; silent defaults for required business fields.
-- Almost never: unmarshal/`YAML.load` untrusted input (remote code execution risk); treat deserialization success as business validation; generate legal/financial payloads without golden/contract tests.
+- Almost never: unmarshal/`YAML.load` untrusted input (remote code execution risk); treat deserialization success as business validation; generate financial payloads without golden/contract tests.
 
 ## 20. Date, Time, Time Zones, and Clock
 
@@ -277,7 +277,7 @@ Date/time bugs are business bugs. Use explicit types and freeze time in tests.
 - Always: use timezone-aware times for instants; define a timezone policy; distinguish date-only from timestamp; inject a clock when current time affects behavior; test boundary dates.
 - Prefer: `Time`/`DateTime` with explicit zone (or Rails `Time.zone`); UTC internally; ISO-8601 at boundaries; tests for end-of-month, leap year, DST, and invalid ranges.
 - Avoid: `Time.now`/`Date.today` directly in domain logic; comparing dates as strings; relying on the machine's local timezone; re-parsing date strings throughout business rules.
-- Almost never: use local machine time as business truth; ignore timezone requirements in legal/financial workflows; make tests depend on today's date.
+- Almost never: use local machine time as business truth; ignore timezone requirements in financial workflows; make tests depend on today's date.
 
 ## 21. Money, Decimals, and Numeric Rules
 
@@ -285,8 +285,8 @@ Use exact, domain-appropriate numeric types.
 
 - Always: use `BigDecimal` (or integer minor units, or a money gem) for money and precise decimals; define rounding and scale explicitly; test boundary, zero, negative, and maximum values.
 - Prefer: value objects for money/percentages/measurements; constants named for business meaning; names that include units (`amount_cents`, `duration_days`).
-- Avoid: `Float` for money/legal/financial calculations; hidden unit conversion; magic numbers scattered through code; comparing floats directly.
-- Almost never: round legal/payroll/financial values without tests; mix units in one field; use binary floating point for auditable calculations.
+- Avoid: `Float` for money/financial calculations; hidden unit conversion; magic numbers scattered through code; comparing floats directly.
+- Almost never: round payroll/financial values without tests; mix units in one field; use binary floating point for auditable calculations.
 
 ## 22. Security Baseline
 
@@ -332,7 +332,7 @@ them.
 - Always: keep controllers/actions thin (parse, authorize, call use case, render); validate boundary input; keep persistence in repositories/adapters; use migrations; test custom queries and mappings; handle N+1 deliberately.
 - Prefer: PORO domain objects mapped to/from records; query objects/repositories with business-named methods; strong parameters; serializers for output; transactions at the application boundary.
 - Avoid: business rules in ActiveRecord callbacks/validations only; fat models that mix persistence and domain rules; exposing records directly as API responses; lazy-loading surprises across boundaries.
-- Almost never: put legal/financial decisions in callbacks; run schema auto-migration in production without policy; make transactions span slow external calls without explicit design.
+- Almost never: put financial decisions in callbacks; run schema auto-migration in production without policy; make transactions span slow external calls without explicit design.
 
 ## 27. Testing Strategy
 
@@ -360,7 +360,7 @@ Examples: core business rules, state machines, authorization, money/time logic.
 Required: the above plus edge-case and regression tests, coverage thresholds, architecture checks, complexity within limits.
 
 ### Critical-risk
-Examples: security, signing/crypto, legal/financial/compliance, audit, data integrity.
+Examples: security, signing/crypto, financial, audit, data integrity, safety-critical.
 Required: the above plus golden/contract tests, error/rejection-path tests, audit/traceability tests, concurrency/thread-safety tests, mutation tests where available, security/dependency audit.
 
 ## 29. Coverage and Mutation Testing
@@ -372,7 +372,7 @@ Coverage is necessary but not sufficient; mutation testing is stronger evidence 
 |Area|Line Coverage|Branch Coverage|Mutation Score|
 |---|---|---|---|
 |Domain / business rules|>= 90%|>= 85%|>= 80%|
-|Critical legal/financial/audit/security rules|>= 95%|>= 90%|>= 85%|
+|Critical security/financial/audit rules|>= 95%|>= 90%|>= 85%|
 |Application services|>= 85%|>= 80%|>= 75%|
 |Infrastructure adapters|>= 70%|>= 60%|When practical|
 |API/route handlers|>= 70%|>= 60%|Usually not required|

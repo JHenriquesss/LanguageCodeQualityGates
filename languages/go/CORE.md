@@ -38,7 +38,7 @@ checks apply and state any intentionally excluded and why.
 - **Low** (helpers, simple types, internal refactors, throwaway tools): build, gofmt, vet, basic behavior tests. MUST 1-4, 9-11.
 - **Medium** (application services, validation, persistence/external adapters): + failure-path tests, integration at seams, coverage. Add MUST 5, 7, 8.
 - **High** (core business rules, state transitions, authorization, money/time logic): + edge-case and regression tests, coverage thresholds, architecture checks, complexity limits. Add MUST 6; tighten 5.
-- **Critical** (security, signing/crypto, legal/financial/compliance, audit, data integrity, concurrency): + golden/contract tests, error/rejection paths, audit/traceability, race/cancellation evidence, mutation or fuzz where applicable. Full gate, no skipped checks.
+- **Critical** (security, signing/crypto, financial, audit, data integrity, safety-critical, concurrency): + golden/contract tests, error/rejection paths, audit/traceability, race/cancellation evidence, mutation or fuzz where applicable. Full gate, no skipped checks.
 
 ## Score (0-100)
 
@@ -62,7 +62,7 @@ checks apply and state any intentionally excluded and why.
 - Max 79 if dependency/security checks were skipped after meaningful dependency changes.
 - Max 84 if concurrency-sensitive code lacks race/cancellation evidence.
 - Max 84 if error paths are not tested in medium/high-risk code.
-- Max 89 if critical legal/security/signing code lacks golden/contract/error-path tests.
+- Max 89 if critical security/signing code lacks golden/contract/error-path tests.
 - Max 89 if coverage requirements were skipped without reason.
 - Max 89 if unsafe/cgo is present without strong tests and documentation.
 - Max 94 if critical code lacks mutation/fuzz evidence or documented readiness.
@@ -72,7 +72,7 @@ checks apply and state any intentionally excluded and why.
 |Area|Line|Branch/Behavior|Mutation|
 |---|---|---|---|
 |Domain/business rules|>= 90%|>= 85%|>= 80%|
-|Critical legal/regulatory rules|>= 95%|>= 90%|>= 85%|
+|Critical security/financial/audit rules|>= 95%|>= 90%|>= 85%|
 |Application services|>= 85%|>= 80%|>= 75%|
 |Infrastructure adapters|>= 70%|>= 60%|When practical|
 |API/handlers|>= 70%|>= 60%|Usually not required|

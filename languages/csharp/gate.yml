@@ -47,7 +47,7 @@ risk_tiers:
     must: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
     add: [edge-case tests, regression tests, coverage thresholds, architecture checks]
   critical:
-    examples: security, signing/crypto, legal/financial/compliance, audit, data integrity
+    examples: security, signing/crypto, financial, audit, data integrity, safety-critical
     must: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
     add: [golden/contract tests, error/rejection paths, audit/traceability, async cancellation tests, mutation tests]
 

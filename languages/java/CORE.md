@@ -36,8 +36,8 @@ checks apply and state any intentionally excluded and why.
 
 - **Low** (simple DTOs, straightforward mappers, simple config, non-critical utilities): compile, format, basic tests. MUST 1-4, 9-11.
 - **Medium** (application services, validation, persistence adapters, API endpoints): + error-path and integration tests, coverage. Add MUST 5, 7, 8.
-- **High** (core business rules, payroll/legal logic, state transitions, authorization): + edge-case and regression tests, coverage thresholds, architecture checks, complexity limits, mutation where available. Add MUST 6; tighten 5.
-- **Critical** (security, signing/crypto, legal/financial/compliance, audit, data integrity): + golden/contract tests, schema validation, error/rejection paths, audit/traceability, redaction, mutation tests. Full gate, no skipped checks.
+- **High** (core business rules, financial/payroll logic, state transitions, authorization): + edge-case and regression tests, coverage thresholds, architecture checks, complexity limits, mutation where available. Add MUST 6; tighten 5.
+- **Critical** (security, signing/crypto, financial, audit, data integrity, safety-critical): + golden/contract tests, schema validation, error/rejection paths, audit/traceability, redaction, mutation tests. Full gate, no skipped checks.
 
 ## Score (0-100)
 
@@ -64,7 +64,7 @@ checks apply and state any intentionally excluded and why.
 |Security/dependency audit missing where applicable|85|
 |Static analysis missing where applicable|85|
 |Mutation testing missing for critical rules and not justified|85|
-|Regulatory/legal payloads without golden/contract/schema tests|70|
+|Critical payloads without golden/contract/schema tests|70|
 |Known critical bug remains|60|
 |Known security issue remains|50|
 |Secrets committed|20|
@@ -75,7 +75,7 @@ checks apply and state any intentionally excluded and why.
 |Area|Line|Branch|Mutation|
 |---|---|---|---|
 |Domain / business rules|>= 90%|>= 85%|>= 80%|
-|Critical legal/regulatory rules|>= 95%|>= 90%|>= 85%|
+|Critical security/financial/audit rules|>= 95%|>= 90%|>= 85%|
 |Application services|>= 85%|>= 80%|>= 75%|
 |Infrastructure adapters|>= 70%|>= 60%|When practical|
 |API controllers|>= 70%|>= 60%|Usually not required|

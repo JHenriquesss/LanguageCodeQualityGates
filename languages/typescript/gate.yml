@@ -47,7 +47,7 @@ risk_tiers:
     must: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
     add: [edge-case tests, regression tests, coverage thresholds, architecture checks]
   critical:
-    examples: security, signing/crypto, legal/financial/compliance, audit, data integrity
+    examples: security, signing/crypto, financial, audit, data integrity, safety-critical
     must: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
     add: [golden/contract tests, error/rejection paths, audit/traceability, async cancellation/timeout tests, mutation or property tests]
 
@@ -63,7 +63,7 @@ complexity:
 
 coverage:               # quality of assertions matters more than raw percentage
   changed_business_critical: {line: 85, branch: 80}
-  critical_domain_legal_security: {branch: near_100_meaningful}
+  critical_security_financial_audit: {branch: near_100_meaningful}
 
 score_caps:             # score must not exceed
   typecheck_failed: 60
