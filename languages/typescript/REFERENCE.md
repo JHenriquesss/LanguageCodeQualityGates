@@ -1947,49 +1947,24 @@ External integrations are failure-prone and must be isolated, typed, validated, 
 
 ## 39. Regulatory and Legal Strict Gate
 
-### Recommendation
+Code that generates, validates, signs, transmits, stores, or interprets legal, regulatory,
+financial, audit, or compliance data is **critical-risk** (see "Scope by risk tier"). It carries the
+full gate plus the evidence below — no shortcuts, no happy-path-only tests.
 
-Legal/regulatory code must be more strict than ordinary application code.
+- Keep layout/schema/version explicit and version-aware; never mix versions in one unstructured builder.
+- Validate against the schema where one exists; validate business rules before producing output.
+- Golden tests for every generated payload variant; contract tests for external endpoints.
+- Test required, optional, invalid, malformed, and version-difference cases, plus rejection/error responses.
+- Preserve auditability and traceability: correlate request, generated payload, transmission, response, and final state with stable IDs; append-only audit for legal events.
+- Redact sensitive data in logs; never log secrets, keys, or raw legal/personal/financial payloads.
+- Add a regression test for every fixed legal/business bug; document the source, reason, and impact of any rule change.
+- Keep business/legal decisions out of serializers, signing/transport code, and I/O glue.
 
-For regulatory or similar legal payload domains, correctness includes domain rules, schema versions, XML/JSON shape, signing, transmission, rejection handling, auditability, and traceability.
+### Required evidence (record in PHASE-RESULT.md)
 
-### Always do
-
-- Model legal concepts explicitly.
-- Validate raw input before creating legal event state.
-- Keep legal rules outside transport and XML builders.
-- Keep schema/event versions explicit.
-- Generate deterministic payloads.
-- Use golden fixtures for every critical event variant.
-- Test rejection codes and provider error mapping.
-- Test signing/canonicalization where applicable.
-- Redact sensitive data in logs.
-- Produce audit records for submissions, corrections, cancellations, rejections, and retries.
-
-### Prefer
-
-- state-specific types: draft, validated, signed, transmitted, accepted, rejected, cancelled, corrected.
-- contract tests with official/provider fixtures where available.
-- legal rule matrices in tests.
-- stable identifiers and correlation across commands, payloads, signatures, transmissions, and receipts.
-- review by domain experts for legal rule changes.
-
-### Avoid
-
-- generic `Record<string, any>` payloads.
-- magic strings for event codes.
-- legal decisions in XML/JSON builders.
-- raw date strings in domain logic.
-- floating point for legal measurements/money.
-- unvalidated generated DTOs as domain state.
-
-### Almost never do
-
-- Complete regulatory code without golden, contract, error, audit, and failure-path tests.
-- Log raw health/personnel/legal XML.
-- Treat provider rejection as a generic technical error.
-- Use fire-and-forget transmission.
-- Hide legal rules in frontend-only validation.
+Event/payload types affected; schema/layout versions; golden tests added; schema-validation tests;
+contract tests; rejection/error tests; audit/traceability behavior; redaction verified; residual
+legal/regulatory uncertainty.
 
 ## 40. Cryptography, Certificates, and Signing
 

@@ -1971,153 +1971,26 @@ External integrations must be isolated, contract-tested, timeout-bounded, and fa
 
 - Let external systems define internal domain concepts directly. 
 
-## 29. Regulatory and Legal Strict Gate 
-
-## Recommendation 
-
-Any Java code related to regulatory must be treated as high-risk legal/regulatory code. This includes code that: 
-
-- generates regulatory data 
-
-- validates regulatory data 
-
-- signs XML 
-
-- sends events 
-
-- receives responses 
-
-- stores receipts 
-
-- interprets rejections 
-
-- cancels events 
-
-- corrects events 
-
-- manages versions/layouts 
-
-- handles regulatory business rules 
-
-- stores audit evidence 
-
-## Always do 
-
-- Use version-aware structures. 
-
-- Keep schemas/layout versions explicit. 
-
-- Keep event types explicit. 
-
-- Keep business/legal rules explicit. 
-
-- Test required fields. 
-
-- Test optional fields. 
-
-- Test invalid values. 
-
-- Test edge cases. 
-
-- Test version differences. 
-
-- Validate XML against schema when available. 
-
-- Use golden tests for generated XML. 
-
-- Preserve auditability. 
-
-- Preserve traceability. 
-
-- Redact sensitive logs. 
-
-- Handle rejection responses explicitly. 
-
-- Add regression tests for every fixed legal/business bug. 
-
-## Prefer 
-
-- Separate packages by regulatory layout/version. 
-
-- Explicit event models. 
-
-- Explicit mappers from domain/application to regulatory payloads. 
-
-- Deterministic XML generation. 
-
-- Golden files reviewed as contract artifacts. 
-
-- Schema validation in automated tests. 
-
-- Dedicated fixtures per event type. 
-
-- Clear error codes. 
-
-- User-safe error messages. 
-
-- Internal technical error details with trace IDs. 
-
-- Audit records with correlation IDs. 
-
-- Checksums/hashes for generated payloads when useful. 
-
-## Avoid 
-
-- Generic map-based legal payloads. 
-
-- String concatenation for XML. 
-
-- Business rules hidden inside XML builders. 
-
-- Business rules hidden inside signing/sending clients. 
-
-- Silent fallback when schema versions mismatch. 
-
-- Sending events without local validation. 
-
-- Logging full sensitive payloads. 
-
-- Using production certificates in tests. 
-
-## Almost never do 
-
-- Generate regulatory XML without golden tests. 
-
-- Generate regulatory XML without schema/version awareness. 
-
-- Sign XML without deterministic tests. 
-
-- Send events without contract tests. 
-
-- Interpret legal rejection responses with generic string matching only. 
-
-- Mix multiple schema versions in one unstructured class. 
-
-- Change legal interpretation without documenting source, reason, and impact. 
-
-## Additional regulatory evidence required 
-
-For regulatory phases, PHASE-RESULT.md must include: 
-
-## Regulatory evidence 
-
-- Event types affected: 
-
-- Layout/schema versions affected: 
-
-- Golden tests added: 
-
-- Schema validation tests added: 
-
-- Contract tests added: 
-
-- Rejection/error tests added: 
-
-- Audit/traceability behavior added: 
-
-- Sensitive data redaction verified: 
-
-- Known legal/regulatory uncertainty: 
+## 29. Regulatory and Legal Strict Gate
+
+Code that generates, validates, signs, transmits, stores, or interprets legal, regulatory,
+financial, audit, or compliance data is **critical-risk** (see "Scope by risk tier"). It carries the
+full gate plus the evidence below — no shortcuts, no happy-path-only tests.
+
+- Keep layout/schema/version explicit and version-aware; never mix versions in one unstructured builder.
+- Validate against the schema where one exists; validate business rules before producing output.
+- Golden tests for every generated payload variant; contract tests for external endpoints.
+- Test required, optional, invalid, malformed, and version-difference cases, plus rejection/error responses.
+- Preserve auditability and traceability: correlate request, generated payload, transmission, response, and final state with stable IDs; append-only audit for legal events.
+- Redact sensitive data in logs; never log secrets, keys, or raw legal/personal/financial payloads.
+- Add a regression test for every fixed legal/business bug; document the source, reason, and impact of any rule change.
+- Keep business/legal decisions out of serializers, signing/transport code, and I/O glue.
+
+### Required evidence (record in PHASE-RESULT.md)
+
+Event/payload types affected; schema/layout versions; golden tests added; schema-validation tests;
+contract tests; rejection/error tests; audit/traceability behavior; redaction verified; residual
+legal/regulatory uncertainty.
 
 ## 30. Testing Strategy 
 

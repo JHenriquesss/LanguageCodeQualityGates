@@ -3071,82 +3071,24 @@ External integrations must be isolated, contract-tested, timeout-bounded, retry-
 
 ## 43. Regulatory and Legal Strict Gate
 
-## Recommendation
+Code that generates, validates, signs, transmits, stores, or interprets legal, regulatory,
+financial, audit, or compliance data is **critical-risk** (see "Scope by risk tier"). It carries the
+full gate plus the evidence below — no shortcuts, no happy-path-only tests.
 
-regulatory code is legal/regulatory code. It must be treated as critical-risk by default.
+- Keep layout/schema/version explicit and version-aware; never mix versions in one unstructured builder.
+- Validate against the schema where one exists; validate business rules before producing output.
+- Golden tests for every generated payload variant; contract tests for external endpoints.
+- Test required, optional, invalid, malformed, and version-difference cases, plus rejection/error responses.
+- Preserve auditability and traceability: correlate request, generated payload, transmission, response, and final state with stable IDs; append-only audit for legal events.
+- Redact sensitive data in logs; never log secrets, keys, or raw legal/personal/financial payloads.
+- Add a regression test for every fixed legal/business bug; document the source, reason, and impact of any rule change.
+- Keep business/legal decisions out of serializers, signing/transport code, and I/O glue.
 
-Correctness is not only successful compilation. Correctness includes legal validity, schema/version correctness, deterministic XML, signing correctness, traceability, rejection handling, auditability, and supportability.
+### Required evidence (record in PHASE-RESULT.md)
 
-## Always do
-
-- Keep regulatory business rules outside handlers, database adapters, XML builders, and transport DTOs.
-- Model event types and legal states explicitly.
-- Keep event versions explicit.
-- Validate required fields before XML generation.
-- Validate domain rules before signing/transmission.
-- Use version-specific XML models.
-- Generate deterministic XML.
-- Use golden tests for generated XML.
-- Validate against schemas where available.
-- Test rejection codes and business failure paths.
-- Preserve receipts/protocols/rejection reasons.
-- Redact sensitive XML/logs.
-- Record audit trail for generation, signing, sending, rejection, correction, and cancellation.
-- Test cancellation/correction state transitions.
-- Treat certificate/signature handling as security-sensitive.
-
-## Prefer
-
-- Dedicated packages for:
-  - event domain rules
-  - event lifecycle
-  - XML DTOs
-  - XML mapping
-  - schema validation
-  - signing
-  - transmission
-  - receipt interpretation
-  - audit
-- Strong domain types for identifiers, versions, dates, periods, receipts, and legal codes.
-- Fixture matrices for event versions and edge cases.
-- Contract tests against known accepted/rejected payload examples.
-- Fixed clocks for deadline/period rules.
-- Explicit tenant/company/certificate boundaries.
-- Hashes of generated payloads for traceability.
-
-## Avoid
-
-- Treating regulatory payloads as generic maps.
-- String concatenation for XML.
-- Business rules hidden in XML tags or marshaling code.
-- Domain models shaped by generated XML structs.
-- Sending events without validating version/layout.
-- Logging sensitive worker/health/personnel data.
-- Making legal behavior depend on build tags.
-- Retrying sends without idempotency and audit policy.
-
-## Almost never do
-
-- Accept regulatory code without golden tests.
-- Accept legal rule changes without regression tests.
-- Accept signing code without deterministic canonicalization evidence.
-- Accept transmission code without timeout, retry, and audit evidence.
-- Accept receipt/rejection parsing without error-path tests.
-- Score critical regulatory code 90+ without coverage and mutation/fuzz evidence or documented mutation/fuzz readiness.
-
-
-### Second-pass Go hardening
-
-- regulatory logic is critical-risk by default.
-- Legal rules must be explicit, versioned, tested, and traceable.
-- Keep event versions, layout versions, legal codes, receipt/protocol identifiers, and rejection codes strongly modeled.
-- Do not represent legal event state as arbitrary strings or generic maps.
-- Do not hide legal validation in XML tags, serializers, SQL queries, or HTTP handlers.
-- Generated XML requires golden tests, schema validation where available, namespace tests, and deterministic ordering.
-- Signing and transmission require correlation between payload, signature, certificate, request, response, receipt, and final state.
-- Cancellation/correction flows require state-transition tests and audit tests.
-- Sensitive personnel/health/payroll data must be redacted in logs and handled according to project policy.
-- A phase touching regulatory cannot score high without critical-path evidence.
+Event/payload types affected; schema/layout versions; golden tests added; schema-validation tests;
+contract tests; rejection/error tests; audit/traceability behavior; redaction verified; residual
+legal/regulatory uncertainty.
 
 ## 44. Cryptography, Certificates, and Signing
 
